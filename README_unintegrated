@@ -1,0 +1,20 @@
+Get list of unintegrated Gene3D and SUPERFAMILY in InterPro
+
+Need to create db.cfg file where to write information about database connexion for pdbe_test (pdbeUser, pdbePass and pdbeHost) 
+and interpro (ipproUser,ipproPass and ipproHost)
+
+Main program is get_particular_block.py, calls interpro/search_unintegrated.py
+
+1. Clean directory files
+
+2. For each cluster, get the different blocks
+
+3. For each block:
+	- search if gold (same number of CATH and SCOP SF in cluster and same number of CATH and SCOP in block)
+	- search if one to many domains (if CATH is splitted in multiple domains (without other domain from another SF between domains) while SCOP has only one domain)
+
+4. search if unintegrated GENE3D and SUPERFAMILY signatures into InterPro and search of number of corresponding proteins
+	- print unintegrated gold in unintegrated_gold_blocks file
+	- print unintegrated one to many in unintegrated_one_to_many
+
+5. print number of unintegrated gold and one_to_many in corresponding files
