@@ -1,9 +1,8 @@
-package get_mda_blocks;
+ckage get_mda_blocks;
  
 #######################################################################################
 # @author T. Paysan-Lafosse
 # For each cluster, this script determine different MDA blocks (arrangement between CATH and SCOP superfamilies)
-# prints only blocks with at list one CATH and one SCOP superfamilies
 #######################################################################################
 
 use strict;
@@ -24,6 +23,56 @@ sub getMDABlocks{
 	my $mda_blocks_db	= $db{'MDA_BLOCK'};
 	my $cluster_block_db= $db{'CLUSTER_BLOCK'};
 	my $block_uniprot_db= $db{'BLOCK_UNIPROT'};
+
+	#---- create tables ----#
+	my $create_mda_blocks = <<"SQL";
+CREATE TABLE $mda_blocks_db (
+	block varchar(300) not null,
+	missing varchar(5),
+	PRIMARY KEY(block)
+)
+SQL
+
+	$pdbe_dbh->do($create_mda_blocks) or die;
+
+	my $create_cluster_block = <<"SQL";
+CREATE TABLE $cluster_block_db(
+	cluster_node varchar(20) not null,
+	block varchar(300) not null,
+	percentage number,
+	gold varchar(5),
+	PRIMARY KEY (cluster_node, block),
+	FOREIGN KEY (cluster_node) references $cluster_db(cluster_node),
+	FOREIGN KEY (block) references $mda_blocks_db(block)
+)
+SQL
+
+	$pdbe_dbh->do($create_cluster_block) or die;
+
+	my $create_block_uniprot = <<"SQL";
+CREATE TABLE $block_uniprot_db(
+	block varchar(300) not null,
+	accession varchar(15) not null,
+	PRIMARY KEY (block,accession),
+	FOREIGN KEY (block) references $mda_blocks_db(block)
+)
+SQL
+
+	$pdbe_dbh->do($create_block_uniprot) or die;
+
+
+	my $create_block_chain = <<"SQL";
+CREATE TABLE $block_chain_db(
+	block varchar(300) not null,
+	chain_id varchar(5) not null,
+	PRIMARY KEY (block,chain_id),
+	FOREIGN KEY (block) references $mda_blocks_db(block)
+)
+SQL
+
+	$pdbe_dbh->do($create_block_chain) or die;
+	
+	#---- end create tables ----#
 
 	#---- preparing request ----#
 
@@ -124,16 +173,16 @@ sub getMDABlocks{
 		my ($startScop,$endScop) = split (/-/,$mappedRegionScop);
 
 		if ($PCSmaller > 50) {
-			my @c;	$c[0] = $ScopSeg; $c[1] = $startScop; $c[2] = $endScop;
+			my @c;	$c[0] = $ScopSeg; $c[1] = $startScop;
 			push (@{$mapped_domain{$CathSeg}},[ @c ]);
-			my @d;	$d[0] = $CathSeg; $d[1] = $startCath; $c[2] = $endCath;
+			my @d;	$d[0] = $CathSeg; $d[1] = $startCath;
 			push (@{$mapped_domain{$ScopSeg}},[ @d ]);
 			
 			if ($CathID=~/(.{5})\d\d/) {
 				my $ChainID = $1;
-				my @a;	$a[0] = $CathSeg; $a[1] = $startCath; $a[2] = $endCath;
+				my @a;	$a[0] = $CathSeg; $a[1] = $startCath;
 				push (@{$mapped_chainCath{$ChainID}},[ @a ]);
-				my @b;	$b[0] = $ScopSeg; $b[1] = $startScop; $b[2] = $endScop;
+				my @b;	$b[0] = $ScopSeg; $b[1] = $startScop;
 				push (@{$mapped_chainScop{$ChainID}},[ @b ]);
 			} 
 
@@ -187,95 +236,54 @@ sub getMDABlocks{
 
 					# --------------------Start Printing Top Part Of Chain -----------------------# 
 
-					# my %listscop;
-					# my %listcath;
+					my %listscop;
+					my %listcath;
 					my %listregscop;
 					my %listregcath;
-					my $listcathscopSF;
+					my $listcathscop;
 
 					#for each domain in the chain
-					# foreach my $element_ord (@{$domain{$chain}}) {					
-					# 	my ($element,$ord) = split (/;/,$element_ord);
-					# 	if (!$seen{$element}) {
-					# 		# print $element;								# 1. print domain name
-					# 		my ($descriptor,$real_region);
+					foreach my $element_ord (@{$domain{$chain}}) {					
+						my ($element,$ord) = split (/;/,$element_ord);
+						if (!$seen{$element}) {
+							# print $element;								# 1. print domain name
+							my ($descriptor,$real_region);
 
-					# 		#for each region in the domain, get the end of the region and the superfamily (will be used to make SF sequence concatenation)
-					# 		foreach my $region (@{$region{$element}}) {		
-					# 			my $end;
-					# 			my $reg;
-					# 			($descriptor,$real_region) = split (/::/,$region);
-					# 			if ($element =~ /\./) {
-					# 				if($region=~/(-?\d+[A-Z]?)-(-?\d+[A-Z]?)/){
-					# 					$end = $2;
-					# 					$reg = $region;
-					# 				}
-					# 				# print "($region) ";
-					# 			}
-					# 			else {
-					# 				if($real_region=~/(-?\d+[A-Z]?)-(-?\d+[A-Z]?)/){
-					# 					$end = $2;
-					# 					$reg = $real_region;
-					# 				}
-					# 				# print "($real_region)";					# 2. print region
-					# 			}  
-					# 			if ($SF{$element_ord}=~/^[a-z]/){
-					# 				$listscop{$end} = $SF{$element_ord};
-					# 				$listregscop{$reg} = $SF{$element_ord};					
-					# 			}	
-					# 			else{
-					# 				$listcath{$end}=$SF{$element_ord};
-					# 				$listregcath{$reg}=$SF{$element_ord};
-					# 			}
-					# 		}
-					# 		# print "[$SF{$element_ord}]  ";					# 3. print SF
+							#for each region in the domain, get the end of the region and the superfamily (will be used to make SF sequence concatenation)
+							foreach my $region (@{$region{$element}}) {		
+								my $end;
+								my $reg;
+								($descriptor,$real_region) = split (/::/,$region);
+								if ($element =~ /\./) {
+									if($region=~/(-?\d+[A-Z]?)-(-?\d+[A-Z]?)/){
+										$end = $2;
+										$reg = $region;
+									}
+									# print "($region) ";
+								}
+								else {
+									if($real_region=~/(-?\d+[A-Z]?)-(-?\d+[A-Z]?)/){
+										$end = $2;
+										$reg = $real_region;
+									}
+									# print "($real_region)";					# 2. print region
+								}  
+								if ($SF{$element_ord}=~/^[a-z]/){
+									$listscop{$end} = $SF{$element_ord};
+									$listregscop{$reg} = $SF{$element_ord};					
+								}	
+								else{
+									$listcath{$end}=$SF{$element_ord};
+									$listregcath{$reg}=$SF{$element_ord};
+								}
+							}
+							# print "[$SF{$element_ord}]  ";					# 3. print SF
 							
-					# 		if ($element !~ /\./) {
-					# 			$seen{$element}="seen";
-					# 		}
-					# 	}
-					# }
-					if (defined @{$mapped_chainCath{$chain}}) {
-						@{$mapped_chainCath{$chain}} = sort { $a->[1] <=> $b->[1] } @{$mapped_chainCath{$chain}};
+							if ($element !~ /\./) {
+								$seen{$element}="seen";
+							}
+						}
 					}
-
-					# 2) @{$mapped_chainCath{$ChainID}}
-					# e.g. @{$mapped_chainCath{1e8zA}} = (  1e8zA01_1, 2  
-					#					1e8zA02_1, 215
-					#					1e8zA03_1, 329  )
-					# {$hash_node{$node} = "defined";}
-
-					foreach my $arr_domord (@{$mapped_chainCath{$chain}}) {
-						my @arr_domord = $arr_domord;
-						my $domord = $arr_domord[0][0];
-						my $start = $arr_domord[0][1];
-						my $end = $arr_domord[0][2];
-						my $reg = $start."-".$end;
-
-						$listregcath{$reg}=$SF{$domord};
-						# $listcath{$end}=$SF{$domord};
-					}
-					my @sortcath = sortCathScopV2(%listregcath);
-					my $listcathSF = $sortcath[0];
-					my $listcathpos = $sortcath[1];
-
-					if (defined @{$mapped_chainScop{$chain}}) {
-						@{$mapped_chainScop{$chain}} = sort { $a->[1] <=> $b->[1] } @{$mapped_chainScop{$chain}};
-					}
-
-					foreach my $arr_domord (@{$mapped_chainScop{$chain}}) {
-						my @arr_domord = $arr_domord;
-						my $domord = $arr_domord[0][0];
-						my $start = $arr_domord[0][1];
-						my $end = $arr_domord[0][2];
-						my $reg = $start."-".$end;
-
-						$listregscop{$reg} = $SF{$domord};
-						# $listscop{$end} = $SF{$domord};
-					}
-					my @sortscop = sortCathScopV2(%listregscop);
-					my $listscopSF = $sortscop[0];
-					my $listscoppos = $sortscop[1];
 
 					my $gold = "no";
 					my $cpt_gold=0;
@@ -289,70 +297,68 @@ sub getMDABlocks{
 					if ($cpt_gold eq keys %listregcath and keys %listregcath > 0){
 						$gold="yes";
 					}
+
 					#----- MDA blocks ----#
 
 
 					# concatenate cath and scop domains
-					$listcathscopSF = $listcathSF." ".$listscopSF;
+					$listcathscop = sortCathScop(%listcath)." ".sortCathScop(%listscop);
 					# print $listcathscop." $gold\n" if ($gold eq "yes");
 
 					# delete blank space begin and end in case of undefined CATH/SCOP SF
-					$listcathscopSF =~ s/\s+$//;
-					$listcathscopSF =~ s/^\s+//;
+					$listcathscop =~ s/\s+$//;
+					$listcathscop =~ s/^\s+//;
 
 					# get number of SF defined for CATH and SCOP
-					my $sizeListCath = keys %listregcath;
-					my $sizeListScop = keys %listregscop;
+					my $sizeListCath = keys %listcath;
+					my $sizeListScop = keys %listscop;
 
 					# case undefined CATH or SCOP SF
-					# my $missing="null";
+					my $missing="null";
 
-					# if($sizeListCath eq 0){
-					# 	$missing = "Cath";
-					# }
-					# elsif($sizeListScop eq 0){
-					# 	$missing = "Scop";
-					# }
+					if($sizeListCath eq 0){
+						$missing = "Cath";
+					}
+					elsif($sizeListScop eq 0){
+						$missing = "Scop";
+					}
 
-					if ($listcathscopSF ne ''){
-						#insert blocks into MDA_BLOCK table and add info for missing CATH or SCOP mapping
-						$valuesToInsert = "$listcathscopSF,$listcathpos,$listscoppos";
-						@where = ('block','positionCath','positionScop');
-						insertData($pdbe_dbh,$valuesToInsert,$mda_blocks_db,@where);
+					#insert blocks into MDA_BLOCK table and add info for missing CATH or SCOP mapping
+					$valuesToInsert = "$listcathscop,$missing";
+					@where = ('block','missing');
+					insertData($pdbe_dbh,$valuesToInsert,$mda_blocks_db,@where);
 
-						#insert couples block/chainid into BLOCK_CHAIN table
-						$valuesToInsert = "$listcathscopSF,$chain";
-						@where = ('block','chain_id');
-						insertData($pdbe_dbh,$valuesToInsert,$block_chain_db,@where);
+					#insert couples block/chainid into BLOCK_CHAIN table
+					$valuesToInsert = "$listcathscop,$chain";
+					@where = ('block','chain_id');
+					insertData($pdbe_dbh,$valuesToInsert,$block_chain_db,@where);
 
-						#insert couples cluster_node/block into CLUSTER_BLOCK table
-						if(!$seen{$listcathscopSF}){
-							my $percentage = "null";
-							$valuesToInsert = "$cluster_node,$listcathscopSF,$gold,$percentage";
-							@where = ('cluster_node','block','gold','percentage');
-							insertData($pdbe_dbh,$valuesToInsert,$cluster_block_db,@where);
-						}
-						#get uniprot
+					#insert couples cluster_node/block into CLUSTER_BLOCK table
+					if(!$seen{$listcathscop}){
+						my $percentage = "null";
+						$valuesToInsert = "$cluster_node,$listcathscop,$gold,$percentage";
+						@where = ('cluster_node','block','gold','percentage');
+						insertData($pdbe_dbh,$valuesToInsert,$cluster_block_db,@where);
+					}
+					#get uniprot
+					
+					my $uniprotid = getUniprot($chain, $pdbe_dbh);
+					$valuesToInsert = "$listcathscop,$uniprotid";
+					@where = ('block','accession');
+					insertData($pdbe_dbh,$valuesToInsert,$block_uniprot_db,@where);
+
+					#----- End MDA blocks ----#
 						
-						my $uniprotid = getUniprot($chain, $pdbe_dbh);
-						$valuesToInsert = "$listcathscopSF,$uniprotid";
-						@where = ('block','accession');
-						insertData($pdbe_dbh,$valuesToInsert,$block_uniprot_db,@where);
+					# --------------------End Printing Top Part Of Chain -----------------------#
 
-						#----- End MDA blocks ----#
-							
-						# --------------------End Printing Top Part Of Chain -----------------------#
-
-						
-						$seen{$listcathscopSF} ='seen';		
-					}				
 					$seen{$chain} = 'seen';	
+					$seen{$listcathscop} ='seen';						
 				}													
 			} # REPRESENTATIVE  
 		}
 
 		# print "\nThis cluster has $NoOfChain unique chains.\n";	
-		# getUniprotPercentage($pdbe_dbh,$block_uniprot_db,$cluster_block_db,$mda_blocks_db,$cluster_node);
+		getUniprotPercentage($pdbe_dbh,$block_uniprot_db,$cluster_block_db,$mda_blocks_db,$cluster_node);
 	}				
 }
 
@@ -455,42 +461,38 @@ sub sortCathScop{
 
 sub sortCathScopV2{
 	my (%hashSF)= @_;
-	my $sortSF="";
-	my $sortpos="";
-	my @toSort;
+	my $sortlist="";
+	my @unsortlist;
 
 	foreach my $key (keys %hashSF){
-		my @position = split('-',$key);
-		my $start = $position[0];
-		my $end = $position[1];
-		push (@toSort,$end);
+		my @temp=split('-',$key);
+		# print $temp[1]."\t";
+		push (@unsortlist,$temp[1]);	
 	}
 
-	foreach my $pos (sort {$a <=> $b} @toSort){
-		foreach my $key (keys %hashSF){
-			if ($key =~/-$pos$/){
-				$sortSF.=$hashSF{$key}." ";
-				$sortpos.=$key." ";
+	if($#unsortlist > 0){
+		foreach my $value (sort {$a <=> $b} @unsortlist){
+			foreach my $key (keys %hashSF){
+				if ($key =~/$value/){
+					$sortlist.=$hashSF{$key}." ";
+				}
 			}
 		}
 	}
-	$sortSF  =~ s/^\s+//;
-	$sortSF  =~ s/\s+$//; 
-	$sortpos =~ s/^\s+//;
-	$sortpos =~ s/\s+$//; 
+	
+	$sortlist =~ s/\s+$//; 
 
-	my @sorted = ($sortSF,$sortpos);
-
-	return @sorted;
+	return $sortlist;
 }
+
 
 sub printMDABlocks{
 	my ($directory, $pdbe_dbh, %db) = @_;
 
 	print "writting MDA blocks files\n";
 
-	open MDABLOCKS, ">>", $directory."mda_blocks.list";
-	open MDAINFO, ">>", $directory."mda_info.list";
+	open MDABLOCKS, ">>", $directory."mda_blocks_v3.list";
+	open MDAINFO, ">>", $directory."mda_info_v3.list";
 
 	#initialize databases names
 	my $cluster_db 		= $db{'CLUSTER'};
@@ -689,7 +691,4 @@ sub insertData{
 }
 
 1;			
-
-
-
 
