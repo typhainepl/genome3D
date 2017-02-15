@@ -83,6 +83,7 @@ def haveSameNumberOfDomains(nodes):
 	else:
 		return "false"
 
+
 def whiteSpace(pdbecursor,block):
 	#search is there is a domain not in this cluster in the block
 	getBlockPositions = "select positionCath,positionScop from mda_block_new where block=:block"
