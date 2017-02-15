@@ -47,15 +47,10 @@ def getUnintegrated(pdbecursor,ipprocursor,cath,scop,unintegrated_file):
 	ipprocursor.execute(get_unintegrated,('X',cath_search)) or die
 	get_unintegrated_sth = ipprocursor.fetchall()
 
-	for row_ippro in get_unintegrated_sth:
-		#if found signature but no corresponding InterPro identifier => unintegrated
-		if not row_ippro[0]:
-			toPrintCath+= "UNINTEGRATED: "
-			found_cath=1
-			unintegrated_cath+=1
-		
-		toPrintCath+= str(cath_search)+", "
+	toPrintCath+="|| "+cath_search+" || "
 
+	for row_ippro in get_unintegrated_sth:
+		
 		#get the number of protein corresponding to this signature
 		ipprocursor.execute(get_nb_protein,search=cath_search)
 		get_nb_protein_sth = ipprocursor.fetchall()
@@ -63,24 +58,25 @@ def getUnintegrated(pdbecursor,ipprocursor,cath,scop,unintegrated_file):
 		for row_prot in get_nb_protein_sth:
 			#if protein found => print the number
 			if row_prot[0]:
-				toPrintCath+= "nb protein: "+str(row_prot[0])
+				toPrintCath+= str(row_prot[0]) + " || "
 
-	if toPrintCath == '':
-		toPrintCath+="NOT IN DATABASE: "+str(cath_search)
-		notInDb_cath+=1
+		#if found signature but no corresponding InterPro identifier => unintegrated
+		if not row_ippro[0]:
+			toPrintCath+= "|| || ||\n"
+			found_cath=1
+			unintegrated_cath+=1
+		else:
+			toPrintCath+= row_ippro[0]+" || None || ||\n"
+		
+
 
 	#search corresponding SSF signature
 	ipprocursor.execute(get_unintegrated,('Y',scop_search)) or die
 	get_unintegrated_sth = ipprocursor.fetchall()
 
+	toPrintScop+="|| "+scop_search+" || "
+
 	for row_ippro in get_unintegrated_sth:
-		#if found signature but no corresponding InterPro identifier => unintegrated
-		if not row_ippro[0]:
-			toPrintScop+= "UNINTEGRATED: "
-			found_scop=1
-			unintegrated_scop+=1
-		
-		toPrintScop+= str(scop_search)+", "
 
 		#get the number of protein corresponding to this signature
 		ipprocursor.execute(get_nb_protein,search=scop_search)
@@ -89,17 +85,24 @@ def getUnintegrated(pdbecursor,ipprocursor,cath,scop,unintegrated_file):
 		for row_prot in get_nb_protein_sth:
 			#if protein found => print the number
 			if row_prot[0]:
-				toPrintScop+= "nb protein: "+str(row_prot[0])+"\n"
+				toPrintScop+= str(row_prot[0]) + " || "
 
-	if toPrintScop == '':
-		toPrintScop+="NOT IN DATABASE: "+str(scop_search)
-		notInDb_scop+=1
-
+		#if found signature but no corresponding InterPro identifier => unintegrated
+		if not row_ippro[0]:
+			toPrintScop+= "|| || ||\n"
+			found_scop=1
+			unintegrated_scop+=1
+		else:
+			toPrintScop+= row_ippro[0]+" || None || ||\n"
 
 	if (found_cath != '' and found_scop != '') or (found_cath == '' and notInDb_cath != 0 and found_scop != '') or  (found_scop == '' and notInDb_scop != 0 and found_cath != ''):
 		unintegrated_pair+=1
 
 	if found_cath != '' or found_scop != '':
+		file.write("|-----------------------------------------------------------\n")
+		file.write("{{{#!th rowspan=2\n")
+		file.write("[cluster:"+str(cath)+" "+str(cath)+"]\n")
+		file.write("}}}\n")
 		file.write(toPrintCath+"\n")
 		file.write(toPrintScop+"\n")
 
