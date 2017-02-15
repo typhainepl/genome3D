@@ -12,7 +12,7 @@ import cx_Oracle
 import ConfigParser
 import sys
 import re
-import interpro.search_unintegrated
+import search_unintegrated
 
 dirname = os.path.dirname(__file__)
 if not dirname:
@@ -21,7 +21,7 @@ if not dirname:
 config = ConfigParser.RawConfigParser()
 config.read(dirname + '/db.cfg')
 
-directoryToPrint = dirname + '/interpro/unintegrated/'
+directoryToPrint = dirname + '/unintegrated/'
 unintegrated_gold_blocks_file = directoryToPrint+"unintegrated_gold_blocks"
 unintegrated_one_to_many_file = directoryToPrint+"unintegrated_one_to_many"
 
@@ -163,7 +163,7 @@ def getMultipleToOne(pdbecursor,ipprocursor, clusternode, message, unintegrated_
 			elif message == "onetomany" and (haveSameNumberOfDomains(blockDomains) == "more cath" or haveSameNumberOfDomains(blockDomains) == "more scop"):
 				#if there isn't domains with undefined SF in the block
 				if whiteSpace(pdbecursor,block) == 0 and clusternode not in seen:
-					returnValues = interpro.search_unintegrated.getUnintegrated(pdbecursor,ipprocursor, nodes[0], nodes[-1], unintegrated_file)
+					returnValues = search_unintegrated.getUnintegrated(pdbecursor,ipprocursor, nodes[0], nodes[-1], unintegrated_file)
 
 					unintegrated['onetomany']['cath']+=returnValues[0]
 					unintegrated['onetomany']['scop']+=returnValues[1]
@@ -179,7 +179,7 @@ def getMultipleToOne(pdbecursor,ipprocursor, clusternode, message, unintegrated_
 
 		for cath in range (len(nodes)/2):
 			#search unintegrated CATH and SCOP SF in InterPro
-			returnValues = interpro.search_unintegrated.getUnintegrated(pdbecursor,ipprocursor,nodes[cath],nodes[cath+halflength],unintegrated_file)
+			returnValues = search_unintegrated.getUnintegrated(pdbecursor,ipprocursor,nodes[cath],nodes[cath+halflength],unintegrated_file)
 
 			unintegrated['gold']['cath']+=returnValues[0]
 			unintegrated['gold']['scop']+=returnValues[1]
@@ -230,7 +230,7 @@ def getSameNumberCluster(pdbecursor,ipprocursor,unintegrated_gold_blocks_file,un
 ####################
 #main program
 
-TMP = "interpro/unintegrated"
+TMP = "unintegrated"
 clean_tmp(TMP)
 
 unintegrated = getSameNumberCluster(pdbecursor,ipprocursor,unintegrated_gold_blocks_file,unintegrated_one_to_many_file)
