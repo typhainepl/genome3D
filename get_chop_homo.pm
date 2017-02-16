@@ -10,7 +10,7 @@ use warnings;
 use DBI;
 
 sub getChopping{
-	my ($pdbe_dbh, $directory, %db) = @_;
+	my ($pdbe_dbh, $directory, $representative, %db) = @_;
 
 	my $segment_scop_db = $db{'SEGMENT_SCOP'};
 	my $segment_cath_db = $db{'SEGMENT_CATH'};
@@ -164,7 +164,7 @@ sub getChopping{
 
 	#--------------Start: Main Program-----------#
 
-	my %rep = get_representative();
+	my %rep = get_representative($representative);
 	open LOW_PERCENTAGE, ">", $directory."low_percentage.list";
 
 	my $counter_Cluster=0;  my $perfect_equiv=0; my $lone_equiv=0; 
@@ -1380,9 +1380,10 @@ sub uniq {
 
 # get representative list, put in hash %rep
 sub get_representative {
+	my ($representative) = @_;
 	my @repr; 
 	my %rep; 
-	open REP, "/nfs/msd/work2/typhaine/genome3d/representative/representative_list";
+	open REP, $representative;
 	while (my $line = <REP>) { chomp ($line); push (@repr,$line)}
 	foreach my $repr (@repr) {$rep{$repr} = "defined";}
 	return %rep;
