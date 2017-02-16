@@ -51,12 +51,14 @@ $pdbe_dbh->do("drop table MDA_BLOCK_NEW") or die;
 $pdbe_dbh->do("drop table CLUSTER_BLOCK_NEW") or die;
 # $pdbe_dbh->do("drop table CLUSTER_NEW") or die;
 
-my $path="/nfs/msd/work2/typhaine/genome3d/";
+
+my $path="./";
 my $mdaDirectory = $path."MDA_results/CATH_test/";
 my $blockFile = $mdaDirectory."mda_blocks.list";
 my $blockInfo = $mdaDirectory."mda_info.list";
 my $goldFile = $mdaDirectory."gold.list";
 my $clusterFile=$path."cluster_test";
+my $representative = $path."representative/representative_list";
 
 #create tables
 create_tables::createTables($pdbe_dbh,%tables_new);
@@ -80,7 +82,7 @@ create_tables::createTables($pdbe_dbh,%tables_new);
 # get_medals::getMedals($pdbe_dbh,$tables_new{'PDBE_ALL_NODE_MAPPING'});
 
 # #get MDA blocks
-get_mda_blocks::getMDABlocks($pdbe_dbh, $mdaDirectory, %tables_new);
+get_mda_blocks::getMDABlocks($pdbe_dbh, $mdaDirectory, $representative, %tables_new);
 
 #print MDA blocks info into files
 # cleanDirectory($mdaDirectory);
@@ -88,7 +90,7 @@ get_mda_blocks::getMDABlocks($pdbe_dbh, $mdaDirectory, %tables_new);
 # get_mda_blocks::printMDABlocks($mdaDirectory, $pdbe_dbh, %tables_new);
 
 #print other mda info (one instance, equivalent split, class4...)
-# get_chop_homo::getChopping($pdbe_dbh,$mdaDirectory,%tables_new);
+# get_chop_homo::getChopping($pdbe_dbh,$mdaDirectory, $representative, %tables_new);
 
 #print equivalent gold pairs cluster blocks
 # get_gold_clusters::get_gold_clusters($pdbe_dbh,$blockFile,$goldFile, $tables_new{'PDBE_ALL_NODE_MAPPING'});

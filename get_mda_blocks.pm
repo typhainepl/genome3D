@@ -12,7 +12,7 @@ use DBI;
 use Data::Dumper;
  
 sub getMDABlocks{
-	my ($pdbe_dbh, $directory, %db) = @_;
+	my ($pdbe_dbh, $directory, $representative, %db) = @_;
 
 	print "determine MDA blocks\n";
 	#initialize databases names
@@ -143,7 +143,7 @@ sub getMDABlocks{
 
 	#--------------Start: Main Program-----------#
 
-	my %rep = get_representative();
+	my %rep = get_representative($representative);
 
 
 	$cluster_sth->execute() or die "! Error: encountered an error when executing SQL statement:\n";
@@ -352,7 +352,7 @@ sub getMDABlocks{
 		}
 
 		# print "\nThis cluster has $NoOfChain unique chains.\n";	
-		# getUniprotPercentage($pdbe_dbh,$block_uniprot_db,$cluster_block_db,$mda_blocks_db,$cluster_node);
+		getUniprotPercentage($pdbe_dbh,$block_uniprot_db,$cluster_block_db,$mda_blocks_db,$cluster_node);
 	}				
 }
 
@@ -363,9 +363,10 @@ sub uniq {
 
 # get representative list, put in hash %rep
 sub get_representative {
+	my ($representative) = @_;
 	my @repr; 
 	my %rep; 
-	open REP, "/nfs/msd/work2/typhaine/genome3d/representative/representative_list";
+	open REP, $representative;
 	while (my $line = <REP>) { chomp ($line); push (@repr,$line)}
 	foreach my $repr (@repr) {$rep{$repr} = "defined";}
 	return %rep;
@@ -392,7 +393,7 @@ sub getUniprotPercentage{
 	my ($pdbe_dbh,$block_uniprot_db,$cluster_block_db,$mda_blocks_db,$cluster) = @_;
 
 	# get the total number of blocks in the cluster
-	my $get_count_total_block_sth = $pdbe_dbh->prepare("select count(bu.accession) from $block_uniprot_db bu join $cluster_block_db cb using(block) join $mda_blocks_db using(block) where cluster_node=? and missing is null");
+	my $get_count_total_block_sth = $pdbe_dbh->prepare("select count(bu.accession) from $block_uniprot_db bu join $cluster_block_db cb using(block) join $mda_blocks_db using(block) where cluster_node=?");
 	my $nbTotalBlock=0;
 
 	$get_count_total_block_sth->execute($cluster) or die;
@@ -405,7 +406,7 @@ sub getUniprotPercentage{
 from $cluster_block_db cb
 join $block_uniprot_db bu on cb.block=bu.block
 join $mda_blocks_db mb on cb.block=mb.block
-where cluster_node=? and missing is null
+where cluster_node=?
 group by bu.block");
 
 	$get_uniprot_by_block->execute($cluster) or die;
