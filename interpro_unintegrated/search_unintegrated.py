@@ -7,14 +7,9 @@
 
 import re
 
-def getUnintegrated(pdbecursor,ipprocursor,cath,scop,unintegrated_file):
-
+def getUnintegrated(pdbecursor,ipprocursor,nodes,unintegrated_file):
 
 	file = open(unintegrated_file,'a')
-
-	# information that we need to specify to connect to the IPPRO database
-
-	scopSSF = getSSF(pdbecursor,scop)
 
 	#get the superfamilies not integrated in InterPro
 	get_unintegrated=" select\
@@ -27,10 +22,8 @@ def getUnintegrated(pdbecursor,ipprocursor,cath,scop,unintegrated_file):
 	    group by e.entry_ac"
 
 
-	get_nb_protein = "select count(protein_ac) as NB_PROTEIN from interpro.match where method_ac=:search"
+	get_nb_protein = "select ct_prot from interpro_analysis.feature_summary where feature_id=:search"
 
-	cath_search = "G3DSA:"+str(cath)
-	scop_search = "SSF"+str(scopSSF)
 	found_cath=''
 	found_scop=''
 	toPrintCath=''
@@ -42,58 +35,68 @@ def getUnintegrated(pdbecursor,ipprocursor,cath,scop,unintegrated_file):
 	notInDb_scop=0
 
 	toReturn=[]
+	for value in nodes:
+		if re.match("^[a-z]",value):
+			#search corresponding SSF signature
+			scopSSF = getSSF(pdbecursor,value)
+			scop_search = "SSF"+str(scopSSF)
 
-	#search corresponding GENE3D signature
-	ipprocursor.execute(get_unintegrated,('X',cath_search)) or die
-	get_unintegrated_sth = ipprocursor.fetchall()
+			ipprocursor.execute(get_unintegrated,('Y',scop_search)) or die
+			get_unintegrated_sth = ipprocursor.fetchall()
 
-	for row_ippro in get_unintegrated_sth:
-		#if found signature but no corresponding InterPro identifier => unintegrated
-		if not row_ippro[0]:
-			toPrintCath+= "UNINTEGRATED: "
-			found_cath=1
-			unintegrated_cath+=1
-		
-		toPrintCath+= str(cath_search)+", "
+			for row_ippro in get_unintegrated_sth:
+				#if found signature but no corresponding InterPro identifier => unintegrated
+				if not row_ippro[0]:
+					toPrintScop+= "UNINTEGRATED: "
+					found_scop=1
+					unintegrated_scop+=1
+				
+				toPrintScop+= str(scop_search)+", "
 
-		#get the number of protein corresponding to this signature
-		ipprocursor.execute(get_nb_protein,search=cath_search)
-		get_nb_protein_sth = ipprocursor.fetchall()
+				#get the number of protein corresponding to this signature
+				ipprocursor.execute(get_nb_protein,search=scop_search)
+				get_nb_protein_sth = ipprocursor.fetchall()
 
-		for row_prot in get_nb_protein_sth:
-			#if protein found => print the number
-			if row_prot[0]:
-				toPrintCath+= "nb protein: "+str(row_prot[0])
+				for row_prot in get_nb_protein_sth:
+					#if protein found => print the number
+					if row_prot[0]:
+						toPrintScop+= "nb protein: "+str(row_prot[0])+"\n"
 
-	if toPrintCath == '':
-		toPrintCath+="NOT IN DATABASE: "+str(cath_search)
-		notInDb_cath+=1
+			if toPrintScop == '':
+				toPrintScop+="NOT IN DATABASE: "+str(scop_search)
+				notInDb_scop+=1
 
-	#search corresponding SSF signature
-	ipprocursor.execute(get_unintegrated,('Y',scop_search)) or die
-	get_unintegrated_sth = ipprocursor.fetchall()
+		else:
+			#search corresponding GENE3D signature
+			cath_search = "G3DSA:"+str(value)
 
-	for row_ippro in get_unintegrated_sth:
-		#if found signature but no corresponding InterPro identifier => unintegrated
-		if not row_ippro[0]:
-			toPrintScop+= "UNINTEGRATED: "
-			found_scop=1
-			unintegrated_scop+=1
-		
-		toPrintScop+= str(scop_search)+", "
+			ipprocursor.execute(get_unintegrated,('X',cath_search)) or die
+			get_unintegrated_sth = ipprocursor.fetchall()
 
-		#get the number of protein corresponding to this signature
-		ipprocursor.execute(get_nb_protein,search=scop_search)
-		get_nb_protein_sth = ipprocursor.fetchall()
+			if toPrintCath != '':
+				toPrintCath+="\n"
 
-		for row_prot in get_nb_protein_sth:
-			#if protein found => print the number
-			if row_prot[0]:
-				toPrintScop+= "nb protein: "+str(row_prot[0])+"\n"
+			for row_ippro in get_unintegrated_sth:
+				#if found signature but no corresponding InterPro identifier => unintegrated
+				if not row_ippro[0]:
+					toPrintCath+= "UNINTEGRATED: "
+					found_cath=1
+					unintegrated_cath+=1
+				
+				toPrintCath+= str(cath_search)+", "
 
-	if toPrintScop == '':
-		toPrintScop+="NOT IN DATABASE: "+str(scop_search)
-		notInDb_scop+=1
+				#get the number of protein corresponding to this signature
+				ipprocursor.execute(get_nb_protein,search=cath_search)
+				get_nb_protein_sth = ipprocursor.fetchall()
+
+				for row_prot in get_nb_protein_sth:
+					#if protein found => print the number
+					if row_prot[0]:
+						toPrintCath+= "nb protein: "+str(row_prot[0])
+
+			if toPrintCath == '':
+				toPrintCath+="NOT IN DATABASE: "+str(cath_search)
+				notInDb_cath+=1
 
 
 	if (found_cath != '' and found_scop != '') or (found_cath == '' and notInDb_cath != 0 and found_scop != '') or  (found_scop == '' and notInDb_scop != 0 and found_cath != ''):
