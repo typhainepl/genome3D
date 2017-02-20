@@ -24,8 +24,6 @@ def getUnintegrated(pdbecursor,ipprocursor,nodes,unintegrated_file):
 
 	get_nb_protein = "select ct_prot from interpro_analysis.feature_summary where feature_id=:search"
 
-	found_cath=''
-	found_scop=''
 	toPrintCath=''
 	toPrintScop=''
 	unintegrated_cath=0
@@ -35,6 +33,7 @@ def getUnintegrated(pdbecursor,ipprocursor,nodes,unintegrated_file):
 	notInDb_scop=0
 
 	toReturn=[]
+	
 	for value in nodes:
 		if re.match("^[a-z]",value):
 			#search corresponding SSF signature
@@ -48,7 +47,6 @@ def getUnintegrated(pdbecursor,ipprocursor,nodes,unintegrated_file):
 				#if found signature but no corresponding InterPro identifier => unintegrated
 				if not row_ippro[0]:
 					toPrintScop+= "UNINTEGRATED: "
-					found_scop=1
 					unintegrated_scop+=1
 				
 				toPrintScop+= str(scop_search)+", "
@@ -80,7 +78,6 @@ def getUnintegrated(pdbecursor,ipprocursor,nodes,unintegrated_file):
 				#if found signature but no corresponding InterPro identifier => unintegrated
 				if not row_ippro[0]:
 					toPrintCath+= "UNINTEGRATED: "
-					found_cath=1
 					unintegrated_cath+=1
 				
 				toPrintCath+= str(cath_search)+", "
@@ -98,11 +95,13 @@ def getUnintegrated(pdbecursor,ipprocursor,nodes,unintegrated_file):
 				toPrintCath+="NOT IN DATABASE: "+str(cath_search)
 				notInDb_cath+=1
 
+	#determine if unintegrated pair
+	total = unintegrated_cath + unintegrated_scop
 
-	if (found_cath != '' and found_scop != '') or (found_cath == '' and notInDb_cath != 0 and found_scop != '') or  (found_scop == '' and notInDb_scop != 0 and found_cath != ''):
+	if total == len(nodes):
 		unintegrated_pair+=1
 
-	if found_cath != '' or found_scop != '':
+	if unintefrated_cath != 0 or unintegrated_scop != 0:
 		file.write(toPrintCath+"\n")
 		file.write(toPrintScop+"\n")
 
