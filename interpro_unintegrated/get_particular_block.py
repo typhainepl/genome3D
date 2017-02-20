@@ -14,33 +14,6 @@ import sys
 import re
 import search_unintegrated
 
-dirname = os.path.dirname(__file__)
-if not dirname:
-    dirname = '.'
-
-config = ConfigParser.RawConfigParser()
-config.read(dirname + '/db.cfg')
-
-directoryToPrint = dirname + '/unintegrated/'
-unintegrated_gold_blocks_file = directoryToPrint+"unintegrated_gold_blocks_v2"
-unintegrated_one_to_many_file = directoryToPrint+"unintegrated_one_to_many_v2"
-
-#Connexion to PDBE_TEST database
-PDBEUSER=config.get('Global', 'pdbeUser')
-PDBEPASS=config.get('Global', 'pdbePass')
-PDBEHOST=config.get('Global', 'pdbeHost')
-
-pdbeconnection = cx_Oracle.connect(PDBEUSER+'/'+PDBEPASS+'@'+PDBEHOST)
-pdbecursor = pdbeconnection.cursor()
-
-#Connexion to interpro database
-IPPROUSER=config.get('Global', 'ipproUser')
-IPPROPASS=config.get('Global', 'ipproPass')
-IPPROHOST=config.get('Global', 'ipproHost')
-
-ipproconnection = cx_Oracle.connect(IPPROUSER+'/'+IPPROPASS+'@'+IPPROHOST)
-ipprocursor = ipproconnection.cursor()
-
 
 def clean_tmp(path):
 	os.system('rm -Rf '+path)
@@ -83,6 +56,8 @@ def haveSameNumberOfDomains(nodes):
 	else:
 		return "false"
 
+
+
 def whiteSpace(pdbecursor,block):
 	#search is there is a domain not in this cluster in the block
 	getBlockPositions = "select positionCath,positionScop from mda_block_new where block=:block"
@@ -123,7 +98,7 @@ def compareBeginEndDomain(positions):
 	return hasBlank
 
 
-def getMultipleToOne(pdbecursor,ipprocursor, clusternode, message, unintegrated_file,nodes,unintegrated):
+def getUnintegratedBlocks(pdbecursor, ipprocursor, clusternode, number, unintegrated_file, nodes, unintegrated):
 
 	# get the number of blocks in the cluster
 	nbBlock = getNbBlocks(pdbecursor,clusternode)
@@ -152,54 +127,53 @@ def getMultipleToOne(pdbecursor,ipprocursor, clusternode, message, unintegrated_
 		if notInCluster == 0:
 
 			#if same number of CATH and SCOP domains
-			if haveSameNumberOfDomains(blockDomains) == "true":
-				#if only one block in the cluster => GOLD
-				if nbBlock == 1 and clusternode not in seen:
+			if int(number) == 1:
+				if haveSameNumberOfDomains(blockDomains) == "true":
+					#if only one block in the cluster => GOLD
+					if nbBlock == 1 and clusternode not in seen:
 
-					toVerify = 1
-					unintegrated['gold_cluster']+=1
+						toVerify = 1
+						unintegrated['gold_cluster']+=1
 
 			#if one domain in CATH/SCOP corresponds to mulitple domain in SCOP/CATH but in same superfamily
-			elif message == "onetomany" and (haveSameNumberOfDomains(blockDomains) == "more cath" or haveSameNumberOfDomains(blockDomains) == "more scop"):
-				#if there isn't domains with undefined SF in the block
-				if whiteSpace(pdbecursor,block) == 0 and clusternode not in seen:
-					returnValues = search_unintegrated.getUnintegrated(pdbecursor,ipprocursor, nodes[0], nodes[-1], unintegrated_file)
+			else:
+				if haveSameNumberOfDomains(blockDomains) == "more cath" or haveSameNumberOfDomains(blockDomains) == "more scop":
+					#if there isn't domains with undefined SF in the block
+					if whiteSpace(pdbecursor,block) == 0 and clusternode not in seen:
+						returnValues = search_unintegrated.getUnintegrated(pdbecursor,ipprocursor, nodes, unintegrated_file)
 
-					unintegrated['onetomany']['cath']+=returnValues[0]
-					unintegrated['onetomany']['scop']+=returnValues[1]
-					# notInDb_cath+=returnValues[2]
-					# notInDb_scop+=returnValues[3]
-					unintegrated['onetomany']['pair']+=returnValues[4]
-					seen.append(clusternode)
+						unintegrated['counters']['cath']+=returnValues[0]
+						unintegrated['counters']['scop']+=returnValues[1]
+						# notInDb_cath+=returnValues[2]
+						# notInDb_scop+=returnValues[3]
+						unintegrated['counters']['pair']+=returnValues[4]
+						seen.append(clusternode)
 
 
 	#if same number of domains in CATH and SCOP => GOLD BLOCK
-	if toVerify == 1 and message == "gold":
-		halflength = len(nodes)/2
+	if toVerify == 1 and int(number) == 1:
+		#search unintegrated CATH and SCOP SF in InterPro
+		returnValues = search_unintegrated.getUnintegrated(pdbecursor,ipprocursor,nodes,unintegrated_file)
 
-		for cath in range (len(nodes)/2):
-			#search unintegrated CATH and SCOP SF in InterPro
-			returnValues = search_unintegrated.getUnintegrated(pdbecursor,ipprocursor,nodes[cath],nodes[cath+halflength],unintegrated_file)
-
-			unintegrated['gold']['cath']+=returnValues[0]
-			unintegrated['gold']['scop']+=returnValues[1]
-			# # notInDb_cath+=returnValues[2]
-			# # notInDb_scop+=returnValues[3]
-			unintegrated['gold']['pair']+=returnValues[4]
+		unintegrated['counters']['cath']+=returnValues[0]
+		unintegrated['counters']['scop']+=returnValues[1]
+		# # notInDb_cath+=returnValues[2]
+		# # notInDb_scop+=returnValues[3]
+		unintegrated['counters']['pair']+=returnValues[4]
 
 	return unintegrated
 
 		
 
 
-def getSameNumberCluster(pdbecursor,ipprocursor,unintegrated_gold_blocks_file,unintegrated_one_to_many_file):
+def getCluster(pdbecursor,ipprocursor,number,file):
 	#get all the clusters with same number of CATH and SCOP SF
 
 	getNodes = "select * from cluster_new order by cluster_node asc"
 	pdbecursor.execute(getNodes)
 	get_nodes_sth=pdbecursor.fetchall()
 
-	unintegrated = {'gold_cluster':0, 'gold':{'cath':0,'scop':0,'pair':0}, 'onetomany':{'cath':0,'scop':0,'pair':0}}
+	unintegrated = {'gold_cluster':0, 'counters':{'cath':0,'scop':0,'pair':0}}
 
 	for cluster_row in get_nodes_sth:
 
@@ -216,13 +190,21 @@ def getSameNumberCluster(pdbecursor,ipprocursor,unintegrated_gold_blocks_file,un
 				nbCath+=1
 
 		#case of same number of CATH and SCOP superfamilies in the cluster
-		if nbCath == nbScop:
-			# for each cluster, get the blocks
-			unintegrated = getMultipleToOne(pdbecursor, ipprocursor, cluster, "gold", unintegrated_gold_blocks_file, nodes,unintegrated)
+		if int(number) == 1:
+			if nbCath == nbScop:
+				# for each cluster, get the blocks
+				unintegrated = getUnintegratedBlocks(pdbecursor, ipprocursor, cluster, number, file, nodes,unintegrated)
 
 		#case of one CATH and one SCOP superfamily in the cluster
-		if nbCath == nbScop and nbCath == 1:
-			unintegrated = getMultipleToOne(pdbecursor, ipprocursor, cluster, "onetomany", unintegrated_one_to_many_file, nodes,unintegrated)
+		elif int(number) == 2:
+			if nbCath == nbScop and nbCath == 1:
+				unintegrated = getUnintegratedBlocks(pdbecursor, ipprocursor, cluster, number, file, nodes,unintegrated)
+
+		#case of two CATH SF for one SCOP, or one CATH SF for 2 SCOP in cluster
+		elif int(number) == 3:
+			if (nbCath == 2 and nbScop == 1) or (nbCath == 1 and nbScop == 2):
+				unintegrated = getUnintegratedBlocks(pdbecursor, ipprocursor, cluster, number, file, nodes,unintegrated)
+
 
 	return unintegrated
 
@@ -230,26 +212,49 @@ def getSameNumberCluster(pdbecursor,ipprocursor,unintegrated_gold_blocks_file,un
 ####################
 #main program
 
-TMP = "unintegrated"
+
+number = sys.argv[1]
+file_name = sys.argv[2]
+
+dirname = os.path.dirname(__file__)
+if not dirname:
+    dirname = '.'
+
+config = ConfigParser.RawConfigParser()
+config.read(dirname + '/db.cfg')
+
+file_name = dirname + '/unintegrated/'+file_name
+
+#Connexion to PDBE_TEST database
+PDBEUSER=config.get('Global', 'pdbeUser')
+PDBEPASS=config.get('Global', 'pdbePass')
+PDBEHOST=config.get('Global', 'pdbeHost')
+
+pdbeconnection = cx_Oracle.connect(PDBEUSER+'/'+PDBEPASS+'@'+PDBEHOST)
+pdbecursor = pdbeconnection.cursor()
+
+#Connexion to interpro database
+IPPROUSER=config.get('Global', 'ipproUser')
+IPPROPASS=config.get('Global', 'ipproPass')
+IPPROHOST=config.get('Global', 'ipproHost')
+
+ipproconnection = cx_Oracle.connect(IPPROUSER+'/'+IPPROPASS+'@'+IPPROHOST)
+ipprocursor = ipproconnection.cursor()
+
+#clean directory
+# TMP = "unintegrated"
 # clean_tmp(TMP)
 
-unintegrated = getSameNumberCluster(pdbecursor,ipprocursor,unintegrated_gold_blocks_file,unintegrated_one_to_many_file)
+#get cluster and blocks and unintegrated
+unintegrated = getCluster(pdbecursor,ipprocursor,number,file_name)
 
-onetomanyFile = open (unintegrated_one_to_many_file,'a')
-goldFile = open (unintegrated_gold_blocks_file,'a')
+file = open (file_name,'a')
 
-goldFile.write("Resume:\n")
-goldFile.write("GENE3D:"+str(unintegrated['gold']['cath'])+"\n")
-goldFile.write("SUPERFAMILY:"+str(unintegrated['gold']['scop'])+"\n")
-goldFile.write("PAIRS:"+str(unintegrated['gold']['pair']))
+file.write("Resume:\n")
+file.write("GENE3D:"+str(unintegrated['counters']['cath'])+"\n")
+file.write("SUPERFAMILY:"+str(unintegrated['counters']['scop'])+"\n")
+file.write("PAIRS:"+str(unintegrated['counters']['pair']))
 
-gold_cluster = unintegrated['gold_cluster']
+# gold_cluster = unintegrated['gold_cluster']
 
-onetomanyFile.write("Resume:\n")
-onetomanyFile.write("GENE3D:"+str(unintegrated['onetomany']['cath'])+"\n")
-onetomanyFile.write("SUPERFAMILY:"+str(unintegrated['onetomany']['scop'])+"\n")
-onetomanyFile.write("PAIRS:"+str(unintegrated['onetomany']['pair']))
-
-
-onetomanyFile.close()
-goldFile.close()
+file.close()
