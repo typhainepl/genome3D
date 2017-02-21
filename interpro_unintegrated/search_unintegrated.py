@@ -170,4 +170,4 @@ def getSSF(pdbecursor,scop):
 		if sccs == scop:
 			return superfamily
 
-return 0
+	return 0
