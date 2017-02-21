@@ -9,6 +9,7 @@ import re
 
 def getUnintegrated(pdbecursor,ipprocursor,nodes,unintegrated_file):
 
+
 	file = open(unintegrated_file,'a')
 
 	#get the superfamilies not integrated in InterPro
@@ -23,7 +24,8 @@ def getUnintegrated(pdbecursor,ipprocursor,nodes,unintegrated_file):
 
 
 	get_nb_protein = "select ct_prot from interpro_analysis.feature_summary where feature_id=:search"
-
+	
+	cluster_node=''
 	toPrintCath=''
 	toPrintScop=''
 	unintegrated_cath=0
@@ -33,7 +35,7 @@ def getUnintegrated(pdbecursor,ipprocursor,nodes,unintegrated_file):
 	notInDb_scop=0
 
 	toReturn=[]
-	
+
 	for value in nodes:
 		if re.match("^[a-z]",value):
 			#search corresponding SSF signature
@@ -43,13 +45,12 @@ def getUnintegrated(pdbecursor,ipprocursor,nodes,unintegrated_file):
 			ipprocursor.execute(get_unintegrated,('Y',scop_search)) or die
 			get_unintegrated_sth = ipprocursor.fetchall()
 
+			if toPrintScop != '':
+				toPrintScop+="\n"
+
+			toPrintScop+="|| "+scop_search+" || "
+
 			for row_ippro in get_unintegrated_sth:
-				#if found signature but no corresponding InterPro identifier => unintegrated
-				if not row_ippro[0]:
-					toPrintScop+= "UNINTEGRATED: "
-					unintegrated_scop+=1
-				
-				toPrintScop+= str(scop_search)+", "
 
 				#get the number of protein corresponding to this signature
 				ipprocursor.execute(get_nb_protein,search=scop_search)
@@ -58,14 +59,20 @@ def getUnintegrated(pdbecursor,ipprocursor,nodes,unintegrated_file):
 				for row_prot in get_nb_protein_sth:
 					#if protein found => print the number
 					if row_prot[0]:
-						toPrintScop+= "nb protein: "+str(row_prot[0])+"\n"
+						toPrintScop+= str(row_prot[0]) + " || "
 
-			if toPrintScop == '':
-				toPrintScop+="NOT IN DATABASE: "+str(scop_search)
-				notInDb_scop+=1
+				#if found signature but no corresponding InterPro identifier => unintegrated
+				if not row_ippro[0]:
+					toPrintScop+= "|| || ||"
+					unintegrated_scop+=1
+				else:
+					toPrintScop+= row_ippro[0]+" || none || ||"
 
 		else:
 			#search corresponding GENE3D signature
+			if cluster_node == '':
+				cluster_node=value
+
 			cath_search = "G3DSA:"+str(value)
 
 			ipprocursor.execute(get_unintegrated,('X',cath_search)) or die
@@ -74,14 +81,10 @@ def getUnintegrated(pdbecursor,ipprocursor,nodes,unintegrated_file):
 			if toPrintCath != '':
 				toPrintCath+="\n"
 
-			for row_ippro in get_unintegrated_sth:
-				#if found signature but no corresponding InterPro identifier => unintegrated
-				if not row_ippro[0]:
-					toPrintCath+= "UNINTEGRATED: "
-					unintegrated_cath+=1
-				
-				toPrintCath+= str(cath_search)+", "
+			toPrintCath+="|| "+cath_search+" || "
 
+			for row_ippro in get_unintegrated_sth:
+				
 				#get the number of protein corresponding to this signature
 				ipprocursor.execute(get_nb_protein,search=cath_search)
 				get_nb_protein_sth = ipprocursor.fetchall()
@@ -89,19 +92,27 @@ def getUnintegrated(pdbecursor,ipprocursor,nodes,unintegrated_file):
 				for row_prot in get_nb_protein_sth:
 					#if protein found => print the number
 					if row_prot[0]:
-						toPrintCath+= "nb protein: "+str(row_prot[0])
+						toPrintCath+= str(row_prot[0]) + " || "
 
-			if toPrintCath == '':
-				toPrintCath+="NOT IN DATABASE: "+str(cath_search)
-				notInDb_cath+=1
-
+				#if found signature but no corresponding InterPro identifier => unintegrated
+				if not row_ippro[0]:
+					toPrintCath+= "|| || ||"
+					unintegrated_cath+=1
+				else:
+					toPrintCath+= row_ippro[0]+" || none || ||"
+		
 	#determine if unintegrated pair
 	total = unintegrated_cath + unintegrated_scop
 
 	if total == len(nodes):
 		unintegrated_pair+=1
 
-	if unintefrated_cath != 0 or unintegrated_scop != 0:
+	#print in file
+	if unintegrated_cath != 0 or unintegrated_scop != 0:
+		file.write("|-----------------------------------------------------------\n")
+		file.write("{{{#!th rowspan="+str(len(nodes))+"\n")
+		file.write("[cluster:"+str(cluster_node)+" "+str(cluster_node)+"]\n")
+		file.write("}}}\n")
 		file.write(toPrintCath+"\n")
 		file.write(toPrintScop+"\n")
 
@@ -159,4 +170,4 @@ def getSSF(pdbecursor,scop):
 		if sccs == scop:
 			return superfamily
 
-	return 0
+return 0
