@@ -50,7 +50,7 @@ my $blockFile = $mdaDirectory."mda_blocks.list";
 my $blockInfo = $mdaDirectory."mda_info.list";
 my $goldFile = $mdaDirectory."gold.list";
 my $clusterFile=$path."cluster";
-my $representative = $path.'representative/representative_list'
+my $representative = $path.'representative/representative_list';
 
 #create tables
 create_tables::createTables($pdbe_dbh,%tables_new);
