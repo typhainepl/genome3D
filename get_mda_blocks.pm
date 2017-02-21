@@ -235,7 +235,7 @@ sub getMDABlocks{
 					# 		}
 					# 	}
 					# }
-					if (defined @{$mapped_chainCath{$chain}}) {
+					if ($mapped_chainCath{$chain}) {
 						@{$mapped_chainCath{$chain}} = sort { $a->[1] <=> $b->[1] } @{$mapped_chainCath{$chain}};
 					}
 
@@ -259,7 +259,7 @@ sub getMDABlocks{
 					my $listcathSF = $sortcath[0];
 					my $listcathpos = $sortcath[1];
 
-					if (defined @{$mapped_chainScop{$chain}}) {
+					if ($mapped_chainScop{$chain}) {
 						@{$mapped_chainScop{$chain}} = sort { $a->[1] <=> $b->[1] } @{$mapped_chainScop{$chain}};
 					}
 
@@ -393,7 +393,7 @@ sub getUniprotPercentage{
 	my ($pdbe_dbh,$block_uniprot_db,$cluster_block_db,$mda_blocks_db,$cluster) = @_;
 
 	# get the total number of blocks in the cluster
-	my $get_count_total_block_sth = $pdbe_dbh->prepare("select count(bu.accession) from $block_uniprot_db bu join $cluster_block_db cb using(block) join $mda_blocks_db using(block) where cluster_node=?");
+	my $get_count_total_block_sth = $pdbe_dbh->prepare("select count(bu.accession) from $block_uniprot_db bu join $cluster_block_db cb using(block) where cluster_node=?");
 	my $nbTotalBlock=0;
 
 	$get_count_total_block_sth->execute($cluster) or die;
@@ -405,7 +405,6 @@ sub getUniprotPercentage{
 	my $get_uniprot_by_block = $pdbe_dbh->prepare("select bu.block, count(*) as NB_UNIPROT 
 from $cluster_block_db cb
 join $block_uniprot_db bu on cb.block=bu.block
-join $mda_blocks_db mb on cb.block=mb.block
 where cluster_node=?
 group by bu.block");
 

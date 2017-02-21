@@ -268,7 +268,7 @@ sub getChopping{
 					$seen{$chain} = 'seen';							
 					print "\n";	
 
-					if (defined @{$mapped_chainCath{$chain}}) {
+					if ($mapped_chainCath{$chain}) {
 						@{$mapped_chainCath{$chain}} = sort { $a->[1] <=> $b->[1] } @{$mapped_chainCath{$chain}};
 					}
 
@@ -283,9 +283,9 @@ sub getChopping{
 						my $domord = $arr_domord[0][0];
 
 						#-----------------------MDA pair (in-cluster)----------------------------
-						if (defined $hash_node{$SF{$domord}}) {
+						if ($hash_node{$SF{$domord}}) {
 							if (!$seen{$domord}) {
-								if (defined $MDA{$uniq_chain}) {$MDA{$uniq_chain} = $MDA{$uniq_chain}."-".$SF{$domord}}
+								if ($MDA{$uniq_chain}) {$MDA{$uniq_chain} = $MDA{$uniq_chain}."-".$SF{$domord}}
 								else {$MDA{$uniq_chain} = $SF{$domord};}
 							}
 						}
@@ -294,7 +294,7 @@ sub getChopping{
 						#-----------------------MDA-cath only----------------------------
 
 						if (!$seen{$domord}) {
-							if (defined $MDA_cath{$uniq_chain}) {
+							if ($MDA_cath{$uniq_chain}) {
 								$MDA_cath{$uniq_chain} = $MDA_cath{$uniq_chain}."-".$SF{$domord};
 								$Length_cath{$uniq_chain} = $Length_cath{$uniq_chain}."-".$DomainLength{$domord};
 								$Domain_cath{$uniq_chain} = $Domain_cath{$uniq_chain}."-".$domord;
@@ -308,7 +308,7 @@ sub getChopping{
 
 						#-----------------------End MDA-cath only----------------------------
 
-						if (defined $hash_node{$SF{$domord}}) {	 # sf in cluster ONLY. uncomment for both scop/cath if want non-clusters ones
+						if ($hash_node{$SF{$domord}}) {	 # sf in cluster ONLY. uncomment for both scop/cath if want non-clusters ones
 							if (!$seen{$domord}) {
 								# print "Cath: ".$domord;
 								my ($descriptor,$real_region) = split (/::/,$mappedRegion{$domord});
@@ -316,7 +316,7 @@ sub getChopping{
 
 							#-----------------in-cluster MDA----------------------------
 								if (!$seen_incluster_cath{$SF{$domord}}) {
-									if (defined $MDA_incluster_cath{$uniq_chain}) {
+									if ($MDA_incluster_cath{$uniq_chain}) {
 										$MDA_incluster_cath{$uniq_chain} = $MDA_incluster_cath{$uniq_chain}."-".$SF{$domord};
 									}
 									else {
@@ -327,7 +327,7 @@ sub getChopping{
 							#-----------------End in-cluster MDA----------------------------
 
 							#-----------------in-cluster MDA: homo----------------------------
-								if (defined $MDA_incluster_cath_homo{$uniq_chain}) {
+								if ($MDA_incluster_cath_homo{$uniq_chain}) {
 									$MDA_incluster_cath_homo{$uniq_chain} = $MDA_incluster_cath_homo{$uniq_chain}."-".$SF{$domord};
 								}
 								else {$MDA_incluster_cath_homo{$uniq_chain} = $SF{$domord};}
@@ -341,7 +341,7 @@ sub getChopping{
 								@{$mapped_domain{$domord}} = sort { $a->[1] <=> $b->[1] } @{$mapped_domain{$domord}};
 
 								if ($noMappedDomain > 1) {
-									if (!defined $status_Chain{$uniq_chain}) {
+									if (!$status_Chain{$uniq_chain}) {
 										$status_Chain{$uniq_chain} = "ScopChop"; 
 										push (@{$status_chop{$cluster_node}}, "ScopChop");
 										$counter_Chain++;
@@ -351,7 +351,7 @@ sub getChopping{
 											$seen{$nodes} = "seen";
 										}
 									}
-									elsif (defined $status_Chain{$uniq_chain} && $status_Chain{$uniq_chain} eq "CathChop") {
+									elsif ($status_Chain{$uniq_chain} && $status_Chain{$uniq_chain} eq "CathChop") {
 										$status_Chain{$uniq_chain} = "MixedChop"; 
 										push (@{$status_chop{$cluster_node}}, "MixedChop");
 									}
@@ -362,10 +362,10 @@ sub getChopping{
 										my $mapped_domord = $arr_mapped_domord[0][0];
 										# print "$mapped_domord	";
 
-										if (!defined $hash_node{$SF{$mapped_domord}})  {$match_not_incluster{$cluster_node} = "defined";}
+										if (!$hash_node{$SF{$mapped_domord}})  {$match_not_incluster{$cluster_node} = "defined";}
 									}
 									# print "\nPattern: "; print "[$SF{$domord}]	";
-									if (defined $pattern{$uniq_chain}) {
+									if ($pattern{$uniq_chain}) {
 										$pattern{$uniq_chain} = $pattern{$uniq_chain}."[$SF{$domord}]";
 									}
 									else {
@@ -393,7 +393,7 @@ sub getChopping{
 						}
 					}
 					undef %seen_incluster_cath;
-					if (defined @{$mapped_chainScop{$chain}}) {
+					if ($mapped_chainScop{$chain}) {
 						@{$mapped_chainScop{$chain}} = sort { $a->[1] <=> $b->[1] } @{$mapped_chainScop{$chain}};
 					}
 					foreach my $arr_domord (@{$mapped_chainScop{$chain}}) {
@@ -401,9 +401,9 @@ sub getChopping{
 						my $domord = $arr_domord[0][0];
 
 						#-----------------------MDA pair (in-cluster)----------------------------
-						if (defined $hash_node{$SF{$domord}}) {
+						if ($hash_node{$SF{$domord}}) {
 							if (!$seen{$domord}) {
-								if (defined $MDA{$uniq_chain}) {$MDA{$uniq_chain} = $MDA{$uniq_chain}."-".$SF{$domord}}
+								if ($MDA{$uniq_chain}) {$MDA{$uniq_chain} = $MDA{$uniq_chain}."-".$SF{$domord}}
 								else {$MDA{$uniq_chain} = $SF{$domord};}
 							}
 						}
@@ -412,7 +412,7 @@ sub getChopping{
 				 #-----------------------MDA-scop only----------------------------
 
 						if (!$seen{$domord}) {
-							if (defined $MDA_scop{$uniq_chain}) {
+							if ($MDA_scop{$uniq_chain}) {
 								$MDA_scop{$uniq_chain} = $MDA_scop{$uniq_chain}."-".$SF{$domord};
 								$Length_scop{$uniq_chain} = $Length_scop{$uniq_chain}."-".$DomainLength{$domord};
 								$Domain_scop{$uniq_chain} = $Domain_scop{$uniq_chain}."-".$domord;
@@ -426,7 +426,7 @@ sub getChopping{
 			
 				 		#-----------------------MDA-scop only----------------------------
 
-						if (defined $hash_node{$SF{$domord}}) {
+						if ($hash_node{$SF{$domord}}) {
 							if (!$seen{$domord}) {
 
 								# print "Scop: ".$domord;
@@ -435,14 +435,14 @@ sub getChopping{
 
 								#-----------------in-cluster MDA----------------------------
 								if (!$seen_incluster_scop{$SF{$domord}}) {
-									if (defined $MDA_incluster_scop{$uniq_chain}) {$MDA_incluster_scop{$uniq_chain} = $MDA_incluster_scop{$uniq_chain}."-".$SF{$domord}}
+									if ($MDA_incluster_scop{$uniq_chain}) {$MDA_incluster_scop{$uniq_chain} = $MDA_incluster_scop{$uniq_chain}."-".$SF{$domord}}
 									else {$MDA_incluster_scop{$uniq_chain} = $SF{$domord};}
 									$seen_incluster_scop{$SF{$domord}} = "seen";
 								}
 								#-----------------in-cluster MDA----------------------------
 
 								#-----------------in-cluster MDA: homo----------------------------
-								if (defined $MDA_incluster_scop_homo{$uniq_chain}) {
+								if ($MDA_incluster_scop_homo{$uniq_chain}) {
 									$MDA_incluster_scop_homo{$uniq_chain} = $MDA_incluster_scop_homo{$uniq_chain}."-".$SF{$domord};
 								}
 								else {$MDA_incluster_scop_homo{$uniq_chain} = $SF{$domord};}
@@ -458,7 +458,7 @@ sub getChopping{
 								#-------------if there's CathChop------------#
 		
 								if ($noMappedDomain > 1) {
-									if(!defined $status_Chain{$uniq_chain}) {
+									if(!$status_Chain{$uniq_chain}) {
 										$status_Chain{$uniq_chain} = "CathChop"; 
 										push (@{$status_chop{$cluster_node}}, "CathChop");
 									#elsif ($domord =~/^[a-z]/) {$status_Chain{$uniq_chain} = "CathChop"; $status_chop{$cluster_node} = "CathChop";}
@@ -469,7 +469,7 @@ sub getChopping{
 											$seen{$nodes} = "seen";
 										}
 									}
-									elsif (defined $status_Chain{$uniq_chain} && $status_Chain{$uniq_chain} eq "ScopChop") {
+									elsif ($status_Chain{$uniq_chain} && $status_Chain{$uniq_chain} eq "ScopChop") {
 										$status_Chain{$uniq_chain} = "MixedChop"; 
 										push (@{$status_chop{$cluster_node}}, "MixedChop");
 									}
@@ -481,11 +481,11 @@ sub getChopping{
 										my $mapped_domord = $arr_mapped_domord[0][0];
 										# print "$mapped_domord	";
 
-										if (!defined $hash_node{$SF{$mapped_domord}})  {$match_not_incluster{$cluster_node} = "defined";}
+										if (!$hash_node{$SF{$mapped_domord}})  {$match_not_incluster{$cluster_node} = "defined";}
 										if ($SF{$mapped_domord} =~ /^4/) {$class4_status{$cluster_node} = "defined";}
 									}
 									# print "\n		Pattern: "; print "[$SF{$domord}]	";
-									if (defined $pattern{$uniq_chain}) {
+									if ($pattern{$uniq_chain}) {
 										$pattern{$uniq_chain} = $pattern{$uniq_chain}."[$SF{$domord}]";
 									}
 									else {
@@ -522,11 +522,11 @@ sub getChopping{
 					# GET $counter_pattern{}
 					# PRINT $counter_patter{}
 
-					if (defined $status_Chain{$uniq_chain}) {							
+					if ($status_Chain{$uniq_chain}) {							
 						print "Status of this chain is : ".$status_Chain{$uniq_chain}."\n";
 						print "Pattern of this chain is : ".$pattern{$uniq_chain}."\n";			
 
-						if (defined $counter_pattern{$pattern{$uniq_chain}}) {
+						if ($counter_pattern{$pattern{$uniq_chain}}) {
 							$counter_pattern{$pattern{$uniq_chain}}++;
 						}
 						else {
@@ -534,10 +534,10 @@ sub getChopping{
 						}
 						# print "Counting... $counter_pattern{$pattern{$uniq_chain}}\n";
 					}	
-					# if (defined $pattern_mapped{$uniq_chain}) {
+					# if ( $pattern_mapped{$uniq_chain}) {
 					#	print "Pattern of this chain including single is : ".$pattern_mapped{$uniq_chain}."\n";
 
-					#	if (defined $counter_pattern_mapped{$pattern_mapped{$uniq_chain}}) {
+					#	if ( $counter_pattern_mapped{$pattern_mapped{$uniq_chain}}) {
 					#		$counter_pattern_mapped{$pattern_mapped{$uniq_chain}}++;
 					#	}
 					#	else {
@@ -547,22 +547,22 @@ sub getChopping{
 
 					# }
 
-					# if (defined $MDA{$uniq_chain}) {print "MDA of this chain is (only in-cluster): $MDA{$uniq_chain}\n";} 
-					# if (defined $MDA_cath{$uniq_chain}) {print "MDA of this chain (include off-cluster) for cath is: $MDA_cath{$uniq_chain}\n";} 
-					# if (defined $Length_cath{$uniq_chain}) {print "Length of MDA include off-cluster: $Length_cath{$uniq_chain}\n";}
-					# if (defined $MDA_scop{$uniq_chain}) {print "MDA of this chain (include off-cluster) for scop is: $MDA_scop{$uniq_chain}\n";}
-					# if (defined $Length_scop{$uniq_chain}) {print "Length of MDA include off-cluster: $Length_scop{$uniq_chain}\n";}
-					if (defined $MDA_cath{$uniq_chain} && defined $MDA_scop{$uniq_chain}) {
+					# if ( $MDA{$uniq_chain}) {print "MDA of this chain is (only in-cluster): $MDA{$uniq_chain}\n";} 
+					# if ( $MDA_cath{$uniq_chain}) {print "MDA of this chain (include off-cluster) for cath is: $MDA_cath{$uniq_chain}\n";} 
+					# if ( $Length_cath{$uniq_chain}) {print "Length of MDA include off-cluster: $Length_cath{$uniq_chain}\n";}
+					# if ( $MDA_scop{$uniq_chain}) {print "MDA of this chain (include off-cluster) for scop is: $MDA_scop{$uniq_chain}\n";}
+					# if ( $Length_scop{$uniq_chain}) {print "Length of MDA include off-cluster: $Length_scop{$uniq_chain}\n";}
+					if ($MDA_cath{$uniq_chain} && $MDA_scop{$uniq_chain}) {
 						my @c;	$c[0] = $MDA_scop{$uniq_chain}; $c[1] = $Length_scop{$uniq_chain}; $c[2] = $Domain_scop{$uniq_chain}; 
 						push (@{$match_mda{$MDA_cath{$uniq_chain}}}, [ @c ]);
 						my @d;	$d[0] = $MDA_cath{$uniq_chain}; $d[1] = $Length_cath{$uniq_chain}; $d[2] = $Domain_cath{$uniq_chain};
 						push (@{$match_mda{$MDA_scop{$uniq_chain}}}, [ @d ]);
 					}
-					# if (defined $MDA_incluster_cath{$uniq_chain}) {print "In-cluster MDA of this chain for cath is: $MDA_incluster_cath{$uniq_chain}\n";} 
-					# if (defined $MDA_incluster_scop{$uniq_chain}) {print "In-cluster MDA of this chain for scop is: $MDA_incluster_scop{$uniq_chain}\n";} 
+					# if ( $MDA_incluster_cath{$uniq_chain}) {print "In-cluster MDA of this chain for cath is: $MDA_incluster_cath{$uniq_chain}\n";} 
+					# if ( $MDA_incluster_scop{$uniq_chain}) {print "In-cluster MDA of this chain for scop is: $MDA_incluster_scop{$uniq_chain}\n";} 
 					#--------------homology---------------------
 
-					if (defined $MDA_incluster_cath{$uniq_chain} && defined $MDA_incluster_scop{$uniq_chain}) {
+					if ( $MDA_incluster_cath{$uniq_chain} && $MDA_incluster_scop{$uniq_chain}) {
 
 						if (!$seen_homo{$MDA_incluster_scop{$uniq_chain}}) {
 							push (@{$homology{$MDA_incluster_cath{$uniq_chain}}}, $MDA_incluster_scop{$uniq_chain});
@@ -576,10 +576,10 @@ sub getChopping{
 					} 
 					#-------------homology----------------------
 					
-					#if (defined $MDA_incluster_cath_homo{$uniq_chain}) {
+					#if ( $MDA_incluster_cath_homo{$uniq_chain}) {
 					#print "In-cluster MDA of this chain for cath (homo) is: $MDA_incluster_cath_homo{$uniq_chain}\n";
 					#} 
-					#if (defined $MDA_incluster_scop_homo{$uniq_chain}) {
+					#if ( $MDA_incluster_scop_homo{$uniq_chain}) {
 					#print "In-cluster MDA of this chain for scop (homo) is: $MDA_incluster_scop_homo{$uniq_chain}\n";
 					#} 
 					#----------------------End Print Chain Stuff---------------#				
@@ -659,7 +659,7 @@ sub getChopping{
 				foreach my $matching_mda_arr (@{$match_mda{$mda}}) {
 					my @arr_matching_mda = $matching_mda_arr;
 					my $matching_mda = $arr_matching_mda[0][0];
-					if (defined $matching_mda_count{$matching_mda}) {
+					if ( $matching_mda_count{$matching_mda}) {
 						$matching_mda_count{$matching_mda}++;
 					}
 					else {$matching_mda_count{$matching_mda} = 1;}
@@ -704,7 +704,7 @@ sub getChopping{
 		foreach my $chain (keys %MDA) {
 			if (!$seen_mda{$MDA{$chain}}) {
 				if ($MDA{$chain} =~ /-/) {
-					if (defined $mda_count{$cluster_node}) {$mda_count{$cluster_node}++;}
+					if ( $mda_count{$cluster_node}) {$mda_count{$cluster_node}++;}
 					else {$mda_count{$cluster_node} = 1;}
 					print $MDA{$chain}."\n";
 					$seen_mda{$MDA{$chain}} = "seen";
@@ -716,7 +716,7 @@ sub getChopping{
 		my %homo_in_chain;
 		foreach my $chain (keys %MDA_incluster_cath) {
 			if (!$seen_mda_incluster{$MDA_incluster_cath{$chain}}) {
-				if (defined $mda_count_incluster_cath{$cluster_node}) {$mda_count_incluster_cath{$cluster_node}++;}
+				if ( $mda_count_incluster_cath{$cluster_node}) {$mda_count_incluster_cath{$cluster_node}++;}
 				else {$mda_count_incluster_cath{$cluster_node} = 1;}
 				print $MDA_incluster_cath{$chain}."\n";
 				$seen_mda_incluster{$MDA_incluster_cath{$chain}} = "seen";
@@ -727,7 +727,7 @@ sub getChopping{
 		print "In-cluster MDA for SCOP for this cluster: \n";
 		foreach my $chain (keys %MDA_incluster_scop) {
 			if (!$seen_mda_incluster{$MDA_incluster_scop{$chain}}) {
-				if (defined $mda_count_incluster_scop{$cluster_node}) {$mda_count_incluster_scop{$cluster_node}++;}
+				if ( $mda_count_incluster_scop{$cluster_node}) {$mda_count_incluster_scop{$cluster_node}++;}
 				else {$mda_count_incluster_scop{$cluster_node} = 1;}
 				print $MDA_incluster_scop{$chain}."\n";
 				$seen_mda_incluster{$MDA_incluster_scop{$chain}} = "seen";
@@ -736,10 +736,10 @@ sub getChopping{
 			}
 		}
 
-		if (defined $equivalent{$cluster_node}) {print "This cluster has equivalent split\n";}
-		if ($mda_count{$cluster_node} == 1 && !defined $match_not_incluster{$cluster_node}) {
+		if ( $equivalent{$cluster_node}) {print "This cluster has equivalent split\n";}
+		if ($mda_count{$cluster_node} == 1 && !$match_not_incluster{$cluster_node}) {
 			print "One instance MDA----\n"; 
-			if (defined $status_Cluster{$cluster_node}){$lone_mda_status{$cluster_node} = "defined"; $one_instance_mda++;}
+			if ( $status_Cluster{$cluster_node}){$lone_mda_status{$cluster_node} = "defined"; $one_instance_mda++;}
 		}
 		if ($mda_count_incluster_cath{$cluster_node} == 1 && $mda_count_incluster_scop{$cluster_node} == 1) {
 			$one_to_one_sf{$cluster_node} = "defined";
@@ -753,7 +753,7 @@ sub getChopping{
 			
 			my $homo_match_count = @{$homology{$homo_keys}};
 			if ($homo_match_count > 1) {
-				if (defined $homology_status{$cluster_node}) {
+				if ( $homology_status{$cluster_node}) {
 					my $current_homology_status;
 					if ($homo_keys =~/^\d/) {$current_homology_status = "ScopHom";}
 					else {$current_homology_status = "CathHom";}
@@ -784,8 +784,8 @@ sub getChopping{
 					if (!$seen_sf_fold{$superfamily}) {
 						print "(fold = ".$fold.")\t"; 
 						if ($seen_fold{$fold}) {
-							if (defined $fold_status{$cluster_node} && $fold_status{$cluster_node} eq "MixedHom") {}
-							elsif (defined $fold_status{$cluster_node} && $fold_status{$cluster_node} eq "ScopHom") {
+							if ( $fold_status{$cluster_node} && $fold_status{$cluster_node} eq "MixedHom") {}
+							elsif ( $fold_status{$cluster_node} && $fold_status{$cluster_node} eq "ScopHom") {
 								$fold_status{$cluster_node} = "MixedHom"; 
 							}
 							else {
@@ -804,8 +804,8 @@ sub getChopping{
 					else {
 						print "(fold = ".$fold.")\t"; 
 						if ($seen_fold{$fold}) {
-							if (defined $fold_status{$cluster_node} && $fold_status{$cluster_node} eq "MixedHom") {}
-							elsif (defined $fold_status{$cluster_node} && $fold_status{$cluster_node} eq "CathHom") {
+							if ( $fold_status{$cluster_node} && $fold_status{$cluster_node} eq "MixedHom") {}
+							elsif ( $fold_status{$cluster_node} && $fold_status{$cluster_node} eq "CathHom") {
 								$fold_status{$cluster_node} = "MixedHom"; 
 							}
 							else {
@@ -819,7 +819,7 @@ sub getChopping{
 				}
 				#foreach my $fold (@fold) {
 				#print "(fold = ".$fold.")\t";
-				 #if (defined $fold) {
+				 #if ( $fold) {
 				#if ($seen{$fold}) {$fold_status = "defined"; print "+++ THIS CLUSTER HAS SAME FOLD +++\n";}
 				#$seen{$fold} = "seen";
 				 #}
@@ -827,8 +827,8 @@ sub getChopping{
 			}
 		}
 		print "\n#---HOMOLOGY---#";
-		if (defined $homology_status{$cluster_node}) {print "\n*** THIS CLUSTER HAS HOMOLOGY DIFFERENCE which is $homology_status{$cluster_node}***"};
-		if (defined $fold_status{$cluster_node}) {print "\n+++ THIS CLUSTER HAS FOLD DIFFERENCE+++ which is $fold_status{$cluster_node}"};
+		if ( $homology_status{$cluster_node}) {print "\n*** THIS CLUSTER HAS HOMOLOGY DIFFERENCE which is $homology_status{$cluster_node}***"};
+		if ( $fold_status{$cluster_node}) {print "\n+++ THIS CLUSTER HAS FOLD DIFFERENCE+++ which is $fold_status{$cluster_node}"};
 		print "\n";											
 		#--------------------------End Print Cluster Stuff-------------------------#
 	}
@@ -841,6 +841,7 @@ sub getChopping{
 	my $complex_case = 0; my $OneType_case=0;
 	my (@OneType_case); my %complex_case;
 	my %onetype;
+
 	open BAS_CHOP, ">", $directory."BasicChop.list";
 	print BAS_CHOP "List of Basic Chopping:\n";
 	foreach my $cluster_rep (keys %status_Cluster) {
@@ -922,7 +923,7 @@ sub getChopping{
 
 	open COMPLEX_ALL, ">", $directory."all_complex.list";
 	foreach my $complex (keys %complex_case) {
-		if (!defined $homology_status{$complex}) {
+		if (!$homology_status{$complex}) {
 			print COMPLEX_ALL $complex."\n";
 		}
 	}
@@ -939,14 +940,14 @@ sub getChopping{
 		#------------count onetype AND one instance ---------------#
 
 		#------------count onetype AND one instance ---------------#
-		if ($one_instance{$onetype} && !defined $lone_mda_status{$onetype}) {
+		if ($one_instance{$onetype} && !$lone_mda_status{$onetype}) {
 			if (defined $one_instance_onetype) {$one_instance_onetype++;}
 			else {$one_instance_onetype = 1;}
 		}
 		#------------count onetype AND one instance ---------------#
 
 		#------------count onetype AND one instance MDA ---------------#
-		if (defined $lone_mda_status{$onetype} && !defined $lone_status{$onetype}) {
+		if ($lone_mda_status{$onetype} && !$lone_status{$onetype}) {
 			if (defined $lone_mda_onetype) {$lone_mda_onetype++;}
 			else {$lone_mda_onetype = 1;}
 		}
@@ -963,28 +964,28 @@ sub getChopping{
 				$basic_scop_counter++;
 			}
 
-			if (defined $lone_status{$onetype}) {
+			if ($lone_status{$onetype}) {
 				print ONETYPE "Solo case\t";
 				print SOLO $onetype."\t";
 				print SOLO $status."\t";
-				if (defined $class4_status{$onetype}) {
+				if ( $class4_status{$onetype}) {
 					print SOLO "class4";
 				}
 				print SOLO "\n";
 			}
 			else {print ONETYPE "---------\t"};
 
-			if (defined $lone_mda_status{$onetype}) {
+			if ( $lone_mda_status{$onetype}) {
 				print ONETYPE "Solo MDA\t";
 			}		
 			else {print ONETYPE "--------\t"};
 
-			if (defined $one_instance{$onetype}) {
+			if ( $one_instance{$onetype}) {
 				print ONETYPE "One instance\t";
 			}		
 			else {print ONETYPE "-----------\t"};
 
-			if (defined $one_instance{$onetype} && !defined $lone_mda_status{$onetype} && defined $one_to_one_sf{$onetype} ) {
+			if ( $one_instance{$onetype} && ! $lone_mda_status{$onetype} &&  $one_to_one_sf{$onetype} ) {
 			if ($status eq "CathChop") {
 				$one_instance_chop++;
 				$one_instance_chop_cath++;
@@ -996,10 +997,10 @@ sub getChopping{
 			print ONE_INSTANCE_CHOP $onetype."\t";
 			print ONE_INSTANCE_CHOP $status."\t";
 			print ONE_INSTANCE_CHOP $one_instance{$onetype}."\t";
-			if (defined $class4_status{$onetype}) {print ONE_INSTANCE_CHOP "class4";}
+			if ( $class4_status{$onetype}) {print ONE_INSTANCE_CHOP "class4";}
 				print ONE_INSTANCE_CHOP "\n";
 			}
-			if (defined $one_instance{$onetype} && !defined $lone_mda_status{$onetype} && !defined $one_to_one_sf{$onetype} ) {
+			if ( $one_instance{$onetype} && ! $lone_mda_status{$onetype} && ! $one_to_one_sf{$onetype} ) {
 			if ($status eq "CathChop") {
 				$one_instance_chop_homo++;
 				$one_instance_chop_homo_cath++;
@@ -1011,7 +1012,7 @@ sub getChopping{
 			print ONE_INSTANCE_CHOP_HOMO $onetype."\t";
 			print ONE_INSTANCE_CHOP_HOMO $status."\t";
 			print ONE_INSTANCE_CHOP_HOMO $one_instance{$onetype}."\t";
-			if (defined $class4_status{$onetype}) {print ONE_INSTANCE_CHOP_HOMO "class4";}
+			if ( $class4_status{$onetype}) {print ONE_INSTANCE_CHOP_HOMO "class4";}
 				print ONE_INSTANCE_CHOP_HOMO "\n";
 			}
 
@@ -1020,22 +1021,22 @@ sub getChopping{
 			foreach my $cut (@{$cutting{$onetype}}) {
 				print ONETYPE $cut."\t";
 			}
-			if (defined $lone_mda_status{$onetype} && !defined $lone_status{$onetype}) {
+			if ( $lone_mda_status{$onetype} && ! $lone_status{$onetype}) {
 				print SOLO_MDA $onetype."\t";
 				print SOLO_MDA $status."\n";
 			}
-			if (defined $lone_mda_status{$onetype} && !defined $lone_status{$onetype} && defined $equivalent{$onetype}) {
+			if ( $lone_mda_status{$onetype} && ! $lone_status{$onetype} &&  $equivalent{$onetype}) {
 				$solo_mda_comp_equiv++;
 				print SOLO_MDA_COMP_EQUIV $onetype."\t";
 				print SOLO_MDA_COMP_EQUIV $status."\t";
-				if (defined $class4_status{$onetype}) {print SOLO_MDA_COMP_EQUIV "class4"}
+				if ( $class4_status{$onetype}) {print SOLO_MDA_COMP_EQUIV "class4"}
 					print SOLO_MDA_COMP_EQUIV "\n";
 			}
-			if (defined $lone_mda_status{$onetype} && !defined $lone_status{$onetype} && !defined $equivalent{$onetype}) {
+			if ( $lone_mda_status{$onetype} && ! $lone_status{$onetype} && ! $equivalent{$onetype}) {
 				$solo_mda_no_equiv++;
 				print SOLO_MDA_NO_EQUIV $onetype."\t";
 				print SOLO_MDA_NO_EQUIV $status."\t";
-				if (defined $class4_status{$onetype}) {print SOLO_MDA_NO_EQUIV "class4"}
+				if ( $class4_status{$onetype}) {print SOLO_MDA_NO_EQUIV "class4"}
 					print SOLO_MDA_NO_EQUIV "\n";
 			}
 		}
@@ -1048,20 +1049,20 @@ sub getChopping{
 	 # Completely basic chopping, minus 'uninteresting' & 'interesting cases
 		my $status = $onetype{$onetype};
 
-		if (!defined $lone_mda_status{$onetype} && !defined $one_instance{$onetype} && !defined $class4_status{$onetype}) {
+		if (! $lone_mda_status{$onetype} && ! $one_instance{$onetype} && ! $class4_status{$onetype}) {
 			if ($status eq "CathChop") {
 				$basic_minus_LoneAndOneInstance_cath_counter++;
-				if (defined $one_to_one_sf{$onetype} && defined $fold_status{$onetype}) {
+				if ( $one_to_one_sf{$onetype} &&  $fold_status{$onetype}) {
 					$basic_minus_LoneAndOneInstance_cath_CHOP_counter++;
 					print CATHTYPE_CHOP_SAMEFOLD $onetype."\t".$status."\t";
 					print CATHTYPE_CHOP_SAMEFOLD "\n";
 				}
-				elsif (defined $one_to_one_sf{$onetype} && !defined $fold_status{$onetype}) {
+				elsif ( $one_to_one_sf{$onetype} && ! $fold_status{$onetype}) {
 					$basic_minus_LoneAndOneInstance_cath_CHOP_counter++;
 					print CATHTYPE_CHOP $onetype."\t".$status."\t";
 					print CATHTYPE_CHOP "\n";
 				} #only those with samefold are printed first
-				elsif (!defined $fold_status{$onetype}) {
+				elsif (! $fold_status{$onetype}) {
 					$basic_minus_LoneAndOneInstance_cath_CHOP_HOMO_counter++;
 					print CATHTYPE_CHOP_HOMO $onetype."\t".$status."\t";
 					print CATHTYPE_CHOP_HOMO "\n";
@@ -1075,18 +1076,18 @@ sub getChopping{
 		 	elsif ($status eq "ScopChop") {
 				$basic_minus_LoneAndOneInstance_scop_counter++;
 
-				if (defined $one_to_one_sf{$onetype} && defined $fold_status{$onetype}) {
+				if ( $one_to_one_sf{$onetype} &&  $fold_status{$onetype}) {
 					$basic_minus_LoneAndOneInstance_scop_CHOP_counter++;
 					print SCOPTYPE_CHOP_FOLD $onetype."\t".$status."\t";
 					print SCOPTYPE_CHOP_FOLD "\n";
 				}
-				elsif (defined $one_to_one_sf{$onetype} && !defined $fold_status{$onetype}) {
+				elsif ( $one_to_one_sf{$onetype} && ! $fold_status{$onetype}) {
 					$basic_minus_LoneAndOneInstance_scop_CHOP_counter++;
 					print SCOPTYPE_CHOP $onetype."\t".$status."\t";
 					print SCOPTYPE_CHOP "\n";
 
 				} #only those with samefold are printed first
-				elsif (!defined $fold_status{$onetype}) {
+				elsif (! $fold_status{$onetype}) {
 					$basic_minus_LoneAndOneInstance_scop_CHOP_HOMO_counter++;
 					print SCOPTYPE_CHOP_HOMO $onetype."\t".$status."\t";
 					print SCOPTYPE_CHOP_HOMO "\n";
@@ -1136,7 +1137,7 @@ sub getChopping{
 	open EQUIV_SCOP_CHOP_HOMO, ">", $directory."equivalentsplit_scop_chop_homo.list";
 
 	foreach my $equivalentsplit (keys %equivalent) {
-		if (defined $lone_mda_status{$equivalentsplit}) {
+		if ( $lone_mda_status{$equivalentsplit}) {
 			## These are compelte equivalents already in solo_mda.list
 			$equivalent_com_count++;
 		}
@@ -1146,11 +1147,11 @@ sub getChopping{
 				print EQUIV $status."\t";
 			}
 			print EQUIV "\n";
-		  if (defined $onetype{$equivalentsplit} && $onetype{$equivalentsplit} eq "CathChop") {
+		  if ( $onetype{$equivalentsplit} && $onetype{$equivalentsplit} eq "CathChop") {
 				$equivalent_no_count_cath++;
 				print EQUIV_CATH "$equivalentsplit\t"; 
 				print EQUIV_CATH $onetype{$equivalentsplit}."\n";
-			  if (defined $one_to_one_sf{$equivalentsplit}) { 
+			  if ( $one_to_one_sf{$equivalentsplit}) { 
 					$equivalent_no_count_cath_chop++;
 					print EQUIV_CATH_CHOP "$equivalentsplit\n";
 			  }
@@ -1159,13 +1160,13 @@ sub getChopping{
 					print EQUIV_CATH_CHOP_HOMO "$equivalentsplit\n";
 			  }
 		  }
-		  elsif (defined $onetype{$equivalentsplit} &&  $onetype{$equivalentsplit} eq "ScopChop") {
+		  elsif ( $onetype{$equivalentsplit} &&  $onetype{$equivalentsplit} eq "ScopChop") {
 				$equivalent_no_count_scop++;
 			
 				print EQUIV_SCOP "$equivalentsplit\t"; 
 				print EQUIV_SCOP $onetype{$equivalentsplit}."\n";
 
-				if (defined $one_to_one_sf{$equivalentsplit}) { 
+				if ( $one_to_one_sf{$equivalentsplit}) { 
 					$equivalent_no_count_scop_chop++;
 					print EQUIV_SCOP_CHOP "$equivalentsplit\n";
 			  }
@@ -1196,26 +1197,24 @@ sub getChopping{
 	open HOMOLOGY_SCOPHOM, ">", $directory."homology_scophom.list";
 	open HOMOLOGY_MIXEDHOM, ">", $directory."homology_mixedhom.list";
 	foreach my $nodes (keys %homology_status) {
-		if (defined $status_Cluster{$nodes}) {
+		if ( $status_Cluster{$nodes}) {
 			print HOMO_CHOP_GENERAL $nodes."\n";
 		}
-		if (defined $complex_case{$nodes}) {}
-		 
-		else {
-			if (defined $status_Cluster{$nodes}) {
+		if (! $complex_case{$nodes}) {
+			if ( $status_Cluster{$nodes}) {
 				print HOMO_CHOP $nodes."\t"."WITH CHOPPING\t";
 				if ($onetype{$nodes}) {print HOMO_CHOP "onetype\t$onetype{$nodes}\t";}
 				else {print HOMO_CHOP "-------\t--------\t";}
-				if (defined $lone_mda_status{$nodes}) {print HOMO_CHOP "lone case\t";}
+				if ( $lone_mda_status{$nodes}) {print HOMO_CHOP "lone case\t";}
 				else {print HOMO_CHOP "---------\t";}
-				if (defined $one_instance{$nodes}) {print HOMO_CHOP "one instance\t";}
+				if ( $one_instance{$nodes}) {print HOMO_CHOP "one instance\t";}
 				else {print HOMO_CHOP "------------\t";}
-				if (defined $equivalent{$nodes}) {print HOMO_CHOP "equivalent\t";}
+				if ( $equivalent{$nodes}) {print HOMO_CHOP "equivalent\t";}
 				else {print HOMO_CHOP "----------\t";}
 				print HOMO_CHOP "\n";
 			}
 			else {
-				if (!defined $fold_status{$nodes}) {
+				if (! $fold_status{$nodes}) {
 					print HOMOLOGY $nodes."\t".$homology_status{$nodes}."\n";
 					if ($homology_status{$nodes} eq "CathHom") {print HOMOLOGY_CATHHOM $nodes."\t".$homology_status{$nodes}."\n";}
 					if ($homology_status{$nodes} eq "ScopHom") {print HOMOLOGY_SCOPHOM $nodes."\t".$homology_status{$nodes}."\n";}
@@ -1229,7 +1228,7 @@ sub getChopping{
 	#-------------------------Chop + Homo-------------------------------------#
 	open CHOP_HOMO, ">", $directory."chopping_with_homology.list";
 	foreach my $nodes (keys %status_Cluster) {
-		if (defined $homology_status{$nodes}) {
+		if ( $homology_status{$nodes}) {
 			print CHOP_HOMO $nodes."\n";
 		}
 	}
@@ -1241,7 +1240,7 @@ sub getChopping{
 	open SAMEFOLD_SCOP, ">", $directory."samefold_scop.list";
 	open SAMEFOLD_MIXED, ">", $directory."samefold_mixed.list";
 	foreach my $nodes (keys %fold_status) {
-		if (defined $status_Cluster{$nodes}) {}
+		if ( $status_Cluster{$nodes}) {}
 		else {
 			print SAMEFOLD $nodes."\t";
 			print SAMEFOLD $fold_status{$nodes}."\t"; 
@@ -1264,14 +1263,14 @@ sub getChopping{
 				print SAMEFOLD "complex case\t";
 			}
 			else {
-				if (defined $onetype{$nodes}) {print SAMEFOLD $onetype{$nodes}."	 \t";}
+				if ( $onetype{$nodes}) {print SAMEFOLD $onetype{$nodes}."	 \t";}
 				else {print SAMEFOLD "------------\t";}
 			}
 			if ($lone_mda_status{$nodes}) {print SAMEFOLD "loneMDA\t";}
 			else {print SAMEFOLD "-------\t";}
 			if ($lone_status{$nodes}) {print SAMEFOLD "loneChain\t";}
 			else {print SAMEFOLD "---------\t";}
-			if (defined $one_instance{$nodes}) {print SAMEFOLD "one instance\t";}
+			if ( $one_instance{$nodes}) {print SAMEFOLD "one instance\t";}
 			else {print SAMEFOLD "------------\t";}
 			print SAMEFOLD "\n";
 		}
@@ -1286,19 +1285,19 @@ sub getChopping{
 	open CLASS4_HOMO_CHOP, ">", $directory."class4_chop_homo.list";
 	open CLASS4_FOLD, ">", $directory."class4_samefold.list";
 	foreach my $nodes (keys %class4_status) {
-	  if (!defined $complex_case{$nodes} && !defined $lone_mda_status{$nodes} && !defined $one_instance{$nodes}) {
+	  if (! $complex_case{$nodes} && ! $lone_mda_status{$nodes} && ! $one_instance{$nodes}) {
 			print CLASS4 $nodes."\n";
 
-			if (!defined $homology_status{$nodes}) {
+			if (! $homology_status{$nodes}) {
 				print CLASS4_CHOP_ONLY $nodes."\n";
 			}
-			if (!defined $status_Cluster{$nodes}) {
+			if (! $status_Cluster{$nodes}) {
 				print CLASS4_HOMO_ONLY $nodes."\n";
 			}
-			if (defined $homology_status{$nodes} && $status_Cluster{$nodes}) {
+			if ( $homology_status{$nodes} && $status_Cluster{$nodes}) {
 				print CLASS4_HOMO_CHOP $nodes."\n";
 			}
-			if (defined $fold_status{$nodes}) {
+			if ( $fold_status{$nodes}) {
 				print CLASS4_FOLD $nodes."\n";
 			}
 	  }
@@ -1312,13 +1311,13 @@ sub getChopping{
 	open JUL_CHOPHOMO, ">", $directory."Jul_chophomo.list";
 	open JUL_CHOPONLY, ">", $directory."Jul_choponly.list";
 	foreach my $nodes (keys %status_Cluster) {
-		if (defined $lone_mda_status{$nodes}) {
+		if ( $lone_mda_status{$nodes}) {
 			print JUL_LONEMDA $nodes."\n";
 		}
-		elsif (defined $class4_status{$nodes}) {
+		elsif ( $class4_status{$nodes}) {
 			print JUL_CLASS4 $nodes."\n";
 		}
-		elsif (defined $homology_status{$nodes}) {
+		elsif ( $homology_status{$nodes}) {
 			print JUL_CHOPHOMO $nodes."\n";
 		}
 		else {
@@ -1327,7 +1326,7 @@ sub getChopping{
 	}
 
 	foreach my $nodes (keys %homology_status) {
-		if (defined $fold_status{$nodes}) {
+		if ( $fold_status{$nodes}) {
 		#print JUL_SAMEFOLD $nodes."\n";
 		}
 	}
@@ -1395,7 +1394,7 @@ sub writeInFileIfDefined{
 	open FILE, ">", $directory.$filename || die print "can't open file $directory$filename";
 
 	foreach my $data (keys %{$datalist}) {
-		if (defined $fold_status->{$data}) {
+		if ( $fold_status->{$data}) {
 			print FILE $data."\n";
 		}		
 	}
@@ -1428,7 +1427,7 @@ sub writeInFile{
 # 		$chop_test = "ScopChop";
 # 	}
 
-# 	if (!defined $status_Chain->{$uniq_chain}){
+# 	if (! $status_Chain->{$uniq_chain}){
 # 		$status_Chain->{$uniq_chain} = $chop; 
 # 		push (@{$status_chop->{$node}, $chop);
 # 		$counter_Chain++;
@@ -1438,7 +1437,7 @@ sub writeInFile{
 # 			$seen->{$cluster} = "seen";
 # 		}
 # 	}
-# 	elsif(defined $status_Chain->{$uniq_chain} && $status_Chain->{$uniq_chain} eq $chop_test){
+# 	elsif( $status_Chain->{$uniq_chain} && $status_Chain->{$uniq_chain} eq $chop_test){
 # 		$status_Chain->{$uniq_chain} = "MixedChop"; 
 # 		push (@{$status_chop->{$node}}, "MixedChop");
 # 	}
