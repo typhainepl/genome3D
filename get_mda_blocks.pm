@@ -501,9 +501,9 @@ sub printMDABlocks{
 	#preparing request to get info for each block
 	my $get_cluster_sth = $pdbe_dbh->prepare("select * from $cluster_db order by length(nodes) asc") or die;
 
-	my $get_mda_block_sth = $pdbe_dbh->prepare("select * from $mda_blocks_db join $cluster_block_db using (block) where cluster_node=? order by percentage desc, block desc") or die;
+	my $get_mda_block_sth = $pdbe_dbh->prepare("select * from $cluster_block_db where cluster_node=? order by percentage desc, block desc") or die;
 
-	my $get_count_mda_block_sth = $pdbe_dbh->prepare("select count(*) from $mda_blocks_db join $cluster_block_db using (block) where cluster_node=?") or die;
+	my $get_count_mda_block_sth = $pdbe_dbh->prepare("select count(*) from $cluster_block_db where cluster_node=?") or die;
 
 	my $get_total_uniprotid_cluster = $pdbe_dbh->prepare("select count(distinct(accession)) from sifts_xref_residue sxr
 join block_chain_new bc 
