@@ -19,10 +19,10 @@ The main program must be run with 2 arguments:
 2. For each cluster which match the conditions corresponding to the number specified, get the different blocks (```getUnintegratedBlocks```)
 3. For each block:<br>
 	- search if gold (same number of CATH and SCOP SF in cluster and same number of CATH and SCOP in block)
-	- search if one to many domains (if CATH/SCOP is split in multiple domains (without other domain from an unknown SF between domains) while SCOP/CATH has only one domain)<br>
+	- search if one to many domains (if CATH/SCOP is split in multiple domains (without other domain from an unknown SF between domains) while SCOP/CATH has only one domain)
 	- search if unintegrated GENE3D and SUPERFAMILY signatures into InterPro (```getUnintegrated``` in *search_unintegrated.py*)
-            - search number of corresponding proteins
-            - print unintegrated in file
+        - search number of corresponding proteins
+        - print unintegrated in file
 4. Print number of :
 	- unintegrated GENE3D
 	- unintegrated SUPERFAMILY
