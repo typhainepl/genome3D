@@ -8,7 +8,7 @@ All the files are wrote under MDA_results/CATH_4_1 directory
 ## Get data from SIFTS table (*get_segment.pm*)
 - Get different PDB entries data from SIFTS_XREF_RESIDUE table
 - Import in SEGMENT_CATH and SEGMENT_SCOP
-- Concatain data from the both tables on ```auth_asym_id``` in SEGMENT_CATH_SCOP
+- Aggregate data from the both tables on ```auth_asym_id``` in SEGMENT_CATH_SCOP
 
 ## Domain mapping (*domain_mapping.pm*)
 - Compare start/end residue numbers
