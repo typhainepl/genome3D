@@ -57,8 +57,7 @@ sub clustering{
 			foreach my $element_parent (@{$cluster{$super_parent}}) {
 				if ($status{$element_parent} eq "no") {
 					foreach my $element_child (@{$cluster{$element_parent}}) {
-
-						if ( !( $element_child ~~ @{$cluster{$super_parent}} )) {
+						if (!grep(/^$element_child$/,@{$cluster{$super_parent}})){
 							push (@{$cluster{$super_parent}},$element_child);
 						}
 					}

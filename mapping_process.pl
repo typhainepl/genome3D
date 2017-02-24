@@ -31,7 +31,7 @@ my $datestart = localtime();
 print "Mapping process started at $datestart\n";
 
 #delete and rename existing tables
-print "drop tables\n";
+#print "drop tables\n";
 
 my @tables = ('SEGMENT_CATH','SEGMENT_SCOP','SEGMENT_CATH_SCOP','PDBE_ALL_DOMAIN_MAPPING','PDBE_ALL_NODE_MAPPING','BLOCK_CHAIN','BLOCK_UNIPROT','CLUSTER_BLOCK','MDA_BLOCK','CLUSTER');
 
@@ -45,11 +45,11 @@ foreach my $t (@tables){
 	$tables_new{$t}=$t.'_NEW';
 }
 
-$pdbe_dbh->do("drop table BLOCK_CHAIN_NEW") or die;
-$pdbe_dbh->do("drop table BLOCK_UNIPROT_NEW") or die;
-$pdbe_dbh->do("drop table MDA_BLOCK_NEW") or die;
-$pdbe_dbh->do("drop table CLUSTER_BLOCK_NEW") or die;
-# $pdbe_dbh->do("drop table CLUSTER_NEW") or die;
+#$pdbe_dbh->do("drop table BLOCK_CHAIN_NEW") or die;
+#$pdbe_dbh->do("drop table BLOCK_UNIPROT_NEW") or die;
+#$pdbe_dbh->do("drop table MDA_BLOCK_NEW") or die;
+#$pdbe_dbh->do("drop table CLUSTER_BLOCK_NEW") or die;
+#$pdbe_dbh->do("drop table CLUSTER_NEW") or die;
 
 
 my $path="./";
@@ -61,7 +61,7 @@ my $clusterFile=$path."cluster_test";
 my $representative = $path."representative/representative_list";
 
 #create tables
-create_tables::createTables($pdbe_dbh,%tables_new);
+#create_tables::createTables($pdbe_dbh,%tables_new);
 
 #create segment tables
 # get_segment::getSegmentTables($pdbe_dbh,$tables_new{'SEGMENT_CATH'});
@@ -75,14 +75,14 @@ create_tables::createTables($pdbe_dbh,%tables_new);
 # #node mapping
 # node_mapping::nodeMapping($pdbe_dbh,$tables_new{'SEGMENT_SCOP'},$tables_new{'SEGMENT_CATH'}, $tables_new{'PDBE_ALL_DOMAIN_MAPPING'},$tables_new{'PDBE_ALL_NODE_MAPPING'});
 
-# #clustering
-# clustering::clustering($pdbe_dbh,$tables_new{'PDBE_ALL_NODE_MAPPING'},$clusterFile,$tables_new{'CLUSTER'});
+#clustering
+ clustering::clustering($pdbe_dbh,$tables_new{'PDBE_ALL_NODE_MAPPING'},$clusterFile,$tables_new{'CLUSTER'});
 
 # #get medal equivalence
 # get_medals::getMedals($pdbe_dbh,$tables_new{'PDBE_ALL_NODE_MAPPING'});
 
 # #get MDA blocks
-get_mda_blocks::getMDABlocks($pdbe_dbh, $mdaDirectory, $representative, %tables_new);
+#get_mda_blocks::getMDABlocks($pdbe_dbh, $mdaDirectory, $representative, %tables_new);
 
 #print MDA blocks info into files
 # cleanDirectory($mdaDirectory);
