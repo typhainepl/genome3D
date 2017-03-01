@@ -26,12 +26,14 @@ sub getSegmentTables{
 	}
 
 	#Recover data from SIFTS_XREF_RESIDUE
-	my $domain_db;
+	my ($domain_db,$domain);
 	if($database =~ /CATH/){
 		$domain_db = 'CATH_SEGMENT';
+		$domain = 'c.domain';
 	}
 	else{
 		$domain_db = 'SCOP_CLASS';
+		$domain = 'c.SUNID';
 	}
 
 # select data in SIFTS_XREF_RESIDUE, except for:
@@ -40,18 +42,18 @@ sub getSegmentTables{
 #	3) MH>1
 #	4) CATH_DOMAIN or SCOP_SUNID NULL
 
-	my $xref_sql = <<"_SQL_";
+	my $xref_sql = <<"SQL";
 SELECT
-    *
+    sxr.ENTRY_ID, sxr.AUTH_ASYM_ID,sxr.PDB_SEQ_ID,c.ORDINAL,c.BEG_INS_CODE,c.END_INS_CODE,$domain
 FROM
-    SIFTS_XREF_RESIDUE sxr
-INNER JOIN $domain_db c ON sxr.entry_id=c.entry and sxr.auth_asym_id=c.auth_asym_id
+	$domain_db c
+INNER JOIN SIFTS_XREF_RESIDUE sxr ON sxr.entry_id=c.entry and sxr.auth_asym_id=c.auth_asym_id
 WHERE 
 OBSERVED!='N' 
 AND PDB_ONE_LETTER_CODE !='X' 
 AND MH_ID <= 1
 AND CANONICAL_ACC = 1
-_SQL_
+SQL
 
 	# prepare the SQL (returns a "statement handle")
 	my $xref_sth = $pdbe_dbh->prepare( $xref_sql )
