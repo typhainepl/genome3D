@@ -29,7 +29,7 @@ sub getSegmentTables{
 	my ($domain_db,$domain);
 	if($database =~ /CATH/){
 		$domain_db = 'CATH_SEGMENT';
-		$domain = 'c.domain';
+		$domain = 'c.DOMAIN';
 	}
 	else{
 		$domain_db = 'SCOP_CLASS';
@@ -40,7 +40,7 @@ sub getSegmentTables{
 #	1) unobserved residues
 #	2) modified residues
 #	3) MH>1
-#	4) CATH_DOMAIN or SCOP_SUNID NULL
+#	4) data found in CATH_SEGMENT or SCOP_CLASS
 
 	my $xref_sql = <<"SQL";
 SELECT
@@ -54,6 +54,8 @@ AND PDB_ONE_LETTER_CODE !='X'
 AND MH_ID <= 1
 AND CANONICAL_ACC = 1
 SQL
+
+print $xref_sql."\n";
 
 	# prepare the SQL (returns a "statement handle")
 	my $xref_sth = $pdbe_dbh->prepare( $xref_sql )

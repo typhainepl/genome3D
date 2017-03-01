@@ -33,7 +33,7 @@ print "Mapping process started at $datestart\n";
 #delete and rename existing tables
 #print "drop tables\n";
 
-my @tables = ('SEGMENT_CATH_TEST','SEGMENT_SCOP_TEST','SEGMENT_CATH_SCOP','PDBE_ALL_DOMAIN_MAPPING','PDBE_ALL_NODE_MAPPING','BLOCK_CHAIN','BLOCK_UNIPROT','CLUSTER_BLOCK','MDA_BLOCK','CLUSTER');
+my @tables = ('SEGMENT_CATH','SEGMENT_SCOP','SEGMENT_CATH_SCOP','PDBE_ALL_DOMAIN_MAPPING','PDBE_ALL_NODE_MAPPING','BLOCK_CHAIN','BLOCK_UNIPROT','CLUSTER_BLOCK','MDA_BLOCK','CLUSTER');
 
 my %tables_new;
 
@@ -42,7 +42,7 @@ foreach my $t (@tables){
 	# my $alter = 'ALTER TABLE '.$t.'_NEW rename to '.$t.'_OLD';
 	# $pdbe_dbh->do($drop) or die "Can't delete ".$t."_OLD table\n\n";
 	# $pdbe_dbh->do($alter) or die "Can't rename ".$t."_NEW table\n\n";
-	$tables_new{$t}=$t.'_NEW';
+	$tables_new{$t}=$t.'_TEST';
 }
 
 #$pdbe_dbh->do("drop table BLOCK_CHAIN_NEW") or die;
@@ -61,22 +61,22 @@ my $clusterFile=$path."cluster_test";
 my $representative = $path."representative/representative_list";
 
 #create tables
-create_tables::createTables($pdbe_dbh,%tables_new);
+#create_tables::createTables($pdbe_dbh,%tables_new);
 
 #create segment tables
- get_segment::getSegmentTables($pdbe_dbh,$tables_new{'SEGMENT_CATH_TEST'});
- get_segment::getSegmentTables($pdbe_dbh,$tables_new{'SEGMENT_SCOP_TEST'});
+# get_segment::getSegmentTables($pdbe_dbh,$tables_new{'SEGMENT_CATH'});
+# get_segment::getSegmentTables($pdbe_dbh,$tables_new{'SEGMENT_SCOP'});
 
-# get_segment::createCombinedSegment($pdbe_dbh, $tables_new{'SEGMENT_SCOP'},$tables_new{'SEGMENT_CATH'}, $tables_new{'SEGMENT_CATH_SCOP'});
+ get_segment::createCombinedSegment($pdbe_dbh, $tables_new{'SEGMENT_SCOP'},$tables_new{'SEGMENT_CATH'}, $tables_new{'SEGMENT_CATH_SCOP'});
 
 # #calculate and create domain mapping
-# domain_mapping::mapping($pdbe_dbh, $tables_new{'SEGMENT_SCOP'},$tables_new{'SEGMENT_CATH'}, $tables_new{'SEGMENT_CATH_SCOP'}, $tables_new{'PDBE_ALL_DOMAIN_MAPPING'});
+ domain_mapping::mapping($pdbe_dbh, $tables_new{'SEGMENT_SCOP'},$tables_new{'SEGMENT_CATH'}, $tables_new{'SEGMENT_CATH_SCOP'}, $tables_new{'PDBE_ALL_DOMAIN_MAPPING'});
 
 # #node mapping
-# node_mapping::nodeMapping($pdbe_dbh,$tables_new{'SEGMENT_SCOP'},$tables_new{'SEGMENT_CATH'}, $tables_new{'PDBE_ALL_DOMAIN_MAPPING'},$tables_new{'PDBE_ALL_NODE_MAPPING'});
+ node_mapping::nodeMapping($pdbe_dbh,$tables_new{'SEGMENT_SCOP'},$tables_new{'SEGMENT_CATH'}, $tables_new{'PDBE_ALL_DOMAIN_MAPPING'},$tables_new{'PDBE_ALL_NODE_MAPPING'});
 
 #clustering
-# clustering::clustering($pdbe_dbh,$tables_new{'PDBE_ALL_NODE_MAPPING'},$clusterFile,$tables_new{'CLUSTER'});
+ clustering::clustering($pdbe_dbh,$tables_new{'PDBE_ALL_NODE_MAPPING'},$clusterFile,$tables_new{'CLUSTER'});
 
 # #get medal equivalence
 # get_medals::getMedals($pdbe_dbh,$tables_new{'PDBE_ALL_NODE_MAPPING'});
