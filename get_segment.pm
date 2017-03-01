@@ -15,9 +15,9 @@ sub getSegmentTables{
 	my ($pdbe_dbh,$database) = @_;
 
 	my (%count_start, %count_end);
-	my ($EntryId, $AuthAsymId, $residue_id, $sql, $request, $residue);
+	my $request;
 	my @domain_ordinal;
-	my (%entry, %auth,%cathCode);
+	my (%entry,%cathCode);
 
 	#case no database given on input
 	if ($database !~ /CATH/ && $database !~ /SCOP/){
@@ -28,10 +28,10 @@ sub getSegmentTables{
 	#Recover data from SIFTS_XREF_RESIDUE
 	my $domain_db;
 	if($database =~ /CATH/){
-		$domain_db = 'CATH_DOMAIN';
+		$domain_db = 'CATH_SEGMENT';
 	}
 	else{
-		$domain_db = 'SCOP_SUNID';
+		$domain_db = 'SCOP_CLASS';
 	}
 
 # select data in SIFTS_XREF_RESIDUE, except for:
@@ -44,12 +44,13 @@ sub getSegmentTables{
 SELECT
     *
 FROM
-    SIFTS_XREF_RESIDUE
+    SIFTS_XREF_RESIDUE sxr
+INNER JOIN $domain_db c ON sxr.entry_id=c.entry and sxr.auth_asym_id=c.auth_asym_id
 WHERE 
 OBSERVED!='N' 
 AND PDB_ONE_LETTER_CODE !='X' 
-AND MH_ID<=1
-AND $domain_db IS NOT NULL
+AND MH_ID <= 1
+AND CANONICAL_ACC = 1
 _SQL_
 
 	# prepare the SQL (returns a "statement handle")
@@ -70,30 +71,29 @@ _SQL_
 	while ( my $xref_row = $xref_sth->fetchrow_hashref ) {	
 
 		# gather necessary columns
-		my ($domain, $ordinal); 
+		my ($domain, $ordinal, $residue_id); 
 
 		if($database =~ /CATH/){
-			$domain   = $xref_row->{CATH_DOMAIN};
-			$ordinal  = $xref_row->{CATH_ORDINAL};	
+			$domain   = $xref_row->{DOMAIN};
+			$ordinal  = $xref_row->{ORDINAL};	
 			
 		}
 		else{
-			$domain  = $xref_row->{SCOP_SUNID};
-			$ordinal = $xref_row->{SCOP_ORDINAL};
+			$domain  = $xref_row->{SUNID};
+			$ordinal = $xref_row->{ORDINAL};
 		}
 		my $key = "$domain"."-"."$ordinal";
-
-		if($database =~ /CATH/){
-			$cathCode{$key} = $xref_row->{CATHCODE};
-		}
-
-		$EntryId      = $xref_row->{ENTRY_ID};
-		$AuthAsymId   = $xref_row->{AUTH_ASYM_ID};
+		
 		if (!$entry{$key}) {
-		   $entry{$key} = $EntryId;
-		}
-		if (!$auth{$key}) {
-		   $auth{$key} = $AuthAsymId;
+		   $entry{$key}{'entry_id'} 	= $xref_row->{ENTRY_ID};
+		   $entry{$key}{'auth'} 		= $xref_row->{AUTH_ASYM_ID};
+		   $entry{$key}{'beg_ins_code'} = $xref_row->{BEG_INS_CODE};
+		   $entry{$key}{'end_ins_code'} = $xref_row->{END_INS_CODE};
+		   
+		   if($database =~ /SCOP/){
+		   		$entry{$key}{'scopid'} = $xref_row->{SCOP_ID};
+		   		$entry{$key}{'sccs'}   = $xref_row->{SCCS};
+		   }
 		}
 
 		# get starting and ending of domain
@@ -139,9 +139,12 @@ SQL
 
 	foreach my $key (keys %entry) {
 		@domain_ordinal = split("-",$key);
+		my $cath_superfamily;
 
-		#Get begin and end sequence positions in CATH_SEGMENT
-		my %info = getInfoFromScopCath($domain_ordinal[0],$domain_ordinal[1],$pdbe_dbh,$database);
+		if ($database =~ /CATH/){
+			#Get cath superfamily
+			$cath_superfamily = getCathSuperfamily($entry{$key}{'entry_id'},$pdbe_dbh);
+		}
 		
 		#Get sift and cath/scop length
 		my $sift_length = $count_end{$key} - $count_start{$key} + 1;
@@ -152,50 +155,40 @@ SQL
 			$sth_request->execute(
 				$domain_ordinal[0],
 				$domain_ordinal[1],
-				$entry{$key},
-				$auth{$key},
+				$entry{$key}{'entry_id'},
+				$entry{$key}{'auth'},
 				$count_start{$key},
 				$count_end{$key},
-				$info{BEG_INS_CODE},
-				$info{END_INS_CODE},
+				$entry{$key}{'beg_ins_code'},
+				$entry{$key}{'end_ins_code'},
 				$sift_length,
-				$cathCode{$key}
+				$cath_superfamily
 			) or die "Failed to insert data in the table\n"; 
 		}
 		else{
 			$sth_request->execute(
 				$domain_ordinal[0],
-				$info{SCOP_ID},
+				$entry{$key}{'scopid'},
 				$domain_ordinal[1],
-				$entry{$key},
-				$auth{$key},
+				$entry{$key}{'entry_id'},
+				$entry{$key}{'auth'},
 				$count_start{$key},
 				$count_end{$key},
-				$info{BEG_INS_CODE},
-				$info{END_INS_CODE},
+				$entry{$key}{'beg_ins_code'},
+				$entry{$key}{'end_ins_code'},
 				$sift_length,
-				$info{SCCS}
+				$entry{$key}{'sccs'}
 			) or die "Failed to insert data in the table\n";
 		}
 	}
 }
 
-sub getInfoFromScopCath{
-	my ($domain, $ordinal, $pdbe_dbh, $database) = @_;
-	my %info;
-	my $recup_database;
+sub getCathSuperfamily{
+	my ($entry_id, $pdbe_dbh) = @_;
+	my $cath_superfamily;
 	my $domain_name;
 
-	if($database =~ /CATH/){
-		$recup_database = "CATH_SEGMENT";
-		$domain_name="domain";
-	}
-	else{
-		$recup_database = "SCOP_CLASS";
-		$domain_name = "sunid";
-	}
-
-	my $request = "	SELECT * FROM $recup_database WHERE $domain_name='$domain' and ordinal=$ordinal";
+	my $request = "SELECT accession FROM ENTITY_CATH WHERE entry_id='$entry_id'";
 
 	my $sth_request = $pdbe_dbh->prepare($request) or die "ERR prepare selection request\n";
 	$sth_request->execute or die "! Error: encountered an error when executing SQL statement:\n"
@@ -204,17 +197,9 @@ sub getInfoFromScopCath{
 
 	# go through each row
 	while (my $xref_row = $sth_request->fetchrow_hashref){
-		if (defined $xref_row->{BEG_INS_CODE}){ $info{BEG_INS_CODE}=$xref_row->{BEG_INS_CODE};}
-
-		if (defined $xref_row->{END_INS_CODE}){ $info{END_INS_CODE}=$xref_row->{END_INS_CODE};}
-
-		#scop database
-		if (defined $xref_row->{SCOP_ID}){$info{SCOP_ID} = $xref_row->{SCOP_ID};}
-
-		if (defined $xref_row->{SCCS}){$info{SCCS} = $xref_row->{SCCS};}
-
-	 }
-	 return %info;
+		$cath_superfamily = $xref_row->{ACCESSION};
+	}
+	return $cath_superfamily;
 }
 
 # create table SEGMENT_CATH_SCOP_NEW

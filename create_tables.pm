@@ -14,52 +14,52 @@ sub createTables{
 
 	print "create tables\n";
 	#initialize databases names
-	my $segment_scop_db = $db{'SEGMENT_SCOP'};
-	my $segment_cath_db = $db{'SEGMENT_CATH'};
-	my $combined_segment_db = $db{'SEGMENT_CATH_SCOP'};
-	my $domain_mapping_db  = $db{'PDBE_ALL_DOMAIN_MAPPING'};
-	my $node_mapping_db  = $db{'PDBE_ALL_NODE_MAPPING'};
-	my $cluster_db 		= $db{'CLUSTER'};
-	my $block_chain_db	= $db{'BLOCK_CHAIN'};
-	my $mda_blocks_db	= $db{'MDA_BLOCK'};
-	my $cluster_block_db= $db{'CLUSTER_BLOCK'};
-	my $block_uniprot_db= $db{'BLOCK_UNIPROT'};
+	my $segment_scop_db = $db{'SEGMENT_SCOP_TEST'};
+	my $segment_cath_db = $db{'SEGMENT_CATH_TEST'};
+#	my $combined_segment_db = $db{'SEGMENT_CATH_SCOP'};
+#	my $domain_mapping_db  = $db{'PDBE_ALL_DOMAIN_MAPPING'};
+#	my $node_mapping_db  = $db{'PDBE_ALL_NODE_MAPPING'};
+#	my $cluster_db 		= $db{'CLUSTER'};
+#	my $block_chain_db	= $db{'BLOCK_CHAIN'};
+#	my $mda_blocks_db	= $db{'MDA_BLOCK'};
+#	my $cluster_block_db= $db{'CLUSTER_BLOCK'};
+#	my $block_uniprot_db= $db{'BLOCK_UNIPROT'};
 
 	#---- create tables ----#
-# 	my $create_segment_cath = <<"SQL";
-# CREATE TABLE $segment_cath_db(
-# 	cath_domain varchar(10),
-# 	ordinal number(38,0),
-# 	entry_id varchar(4),
-# 	auth_asym_id varchar(5),
-# 	sifts_start number(38,0),
-# 	sifts_end number(38,0), 
-# 	beg_ins_code varchar(1),
-# 	end_ins_code varchar(1),
-# 	sifts_length number(38,0),
-# 	cathcode varchar(20)
-# )
-# SQL
+ 	my $create_segment_cath = <<"SQL";
+CREATE TABLE $segment_cath_db(
+ 	cath_domain varchar(10),
+ 	ordinal number(38,0),
+ 	entry_id varchar(4),
+ 	auth_asym_id varchar(5),
+ 	sifts_start number(38,0),
+ 	sifts_end number(38,0), 
+ 	beg_ins_code varchar(1),
+ 	end_ins_code varchar(1),
+ 	sifts_length number(38,0),
+ 	cathcode varchar(20)
+ )
+SQL
  
-# 	$pdbe_dbh->do($create_segment_cath) or die "Can't create $segment_cath_db table\n\n";
+ 	$pdbe_dbh->do($create_segment_cath) or die "Can't create $segment_cath_db table\n\n";
 
-# 	my $create_segment_scop = <<"SQL";
-# CREATE TABLE $segment_scop_db(
-# 	sunid number(38,0),
-# 	scop_id varchar(8),
-# 	ordinal number(38,0),
-# 	entry_id varchar(4),
-# 	auth_asym_id varchar(5),
-# 	sifts_start number(38,0),
-# 	sifts_end number(38,0),
-# 	beg_ins_code varchar(1),
-# 	end_ins_code varchar(1),
-# 	sifts_length number(38,0),
-# 	sccs varchar(20)
-# )
-# SQL
+	my $create_segment_scop = <<"SQL";
+CREATE TABLE $segment_scop_db(
+ 	sunid number(38,0),
+ 	scop_id varchar(8),
+ 	ordinal number(38,0),
+ 	entry_id varchar(4),
+ 	auth_asym_id varchar(5),
+ 	sifts_start number(38,0),
+ 	sifts_end number(38,0),
+ 	beg_ins_code varchar(1),
+ 	end_ins_code varchar(1),
+ 	sifts_length number(38,0),
+ 	sccs varchar(20)
+)
+SQL
 
-# 	$pdbe_dbh->do($create_segment_scop) or die "Can't create $segment_scop_db table\n\n";
+	$pdbe_dbh->do($create_segment_scop) or die "Can't create $segment_scop_db table\n\n";
 
 
 # 	my $create_segment_cath_scop = <<"SQL";
@@ -158,51 +158,51 @@ sub createTables{
 
 # 	$pdbe_dbh->do($create_cluster) or die "Can't create $cluster_db table\n\n";
 
-
-	my $create_cluster_block = <<"SQL";
-CREATE TABLE $cluster_block_db(
-	cluster_node varchar(20) not null,
-	block varchar(300) not null,
-	percentage number,
-	gold varchar(5),
-	PRIMARY KEY (cluster_node, block),
-	FOREIGN KEY (cluster_node) references $cluster_db(cluster_node)
-)
-SQL
-
-	$pdbe_dbh->do($create_cluster_block) or die "Can't create $cluster_block_db table\n\n";
-
-	my $create_mda_blocks = <<"SQL";
-CREATE TABLE $mda_blocks_db (
-	block varchar(300) not null,
-	positionCath varchar(200) not null,
-	positionScop varchar(200) not null,
-	PRIMARY KEY(block, positionCath, positionScop)
-)
-SQL
-
-	$pdbe_dbh->do($create_mda_blocks) or die "Can't create $mda_blocks_db table\n\n";
-
-	my $create_block_uniprot = <<"SQL";
-CREATE TABLE $block_uniprot_db(
-	block varchar(300) not null,
-	accession varchar(15) not null,
-	PRIMARY KEY (block,accession)
-)
-SQL
-
-	$pdbe_dbh->do($create_block_uniprot) or die "Can't create $block_uniprot_db table\n\n";
-
-
-	my $create_block_chain = <<"SQL";
-CREATE TABLE $block_chain_db(
-	block varchar(300) not null,
-	chain_id varchar(5) not null,
-	PRIMARY KEY (block,chain_id)
-)
-SQL
-
-	$pdbe_dbh->do($create_block_chain) or die "Can't create $block_chain_db table\n\n";
+#
+#	my $create_cluster_block = <<"SQL";
+#CREATE TABLE $cluster_block_db(
+#	cluster_node varchar(20) not null,
+#	block varchar(300) not null,
+#	percentage number,
+#	gold varchar(5),
+#	PRIMARY KEY (cluster_node, block),
+#	FOREIGN KEY (cluster_node) references $cluster_db(cluster_node)
+#)
+#SQL
+#
+#	$pdbe_dbh->do($create_cluster_block) or die "Can't create $cluster_block_db table\n\n";
+#
+#	my $create_mda_blocks = <<"SQL";
+#CREATE TABLE $mda_blocks_db (
+#	block varchar(300) not null,
+#	positionCath varchar(200) not null,
+#	positionScop varchar(200) not null,
+#	PRIMARY KEY(block, positionCath, positionScop)
+#)
+#SQL
+#
+#	$pdbe_dbh->do($create_mda_blocks) or die "Can't create $mda_blocks_db table\n\n";
+#
+#	my $create_block_uniprot = <<"SQL";
+#CREATE TABLE $block_uniprot_db(
+#	block varchar(300) not null,
+#	accession varchar(15) not null,
+#	PRIMARY KEY (block,accession)
+#)
+#SQL
+#
+#	$pdbe_dbh->do($create_block_uniprot) or die "Can't create $block_uniprot_db table\n\n";
+#
+#
+#	my $create_block_chain = <<"SQL";
+#CREATE TABLE $block_chain_db(
+#	block varchar(300) not null,
+#	chain_id varchar(5) not null,
+#	PRIMARY KEY (block,chain_id)
+#)
+#SQL
+#
+#	$pdbe_dbh->do($create_block_chain) or die "Can't create $block_chain_db table\n\n";
 }
 
 1;
