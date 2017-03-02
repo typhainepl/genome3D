@@ -1,6 +1,13 @@
 # Mapping process
 
-Need to create ***config.pl*** file where to write information about database connexion for pdbe_test (db, user and password) 
+## Configuration
+Need to create ***config.pl*** file where to write information about database connexion for pdbe_test (db, user and password)
+
+Need to create a schema under pdbe_test and add synonyms to the tables of the SIFTS_ADMIN_NEW schema, at least to these tables:
+- SIFTS_XREF_RESIDUE
+- CATH_SEGMENT
+- ENTITY_CATH
+- SCOP_CLASS
 
 Main program is ***mapping_process.pl*** <br>
 All the files are wrote under MDA_results/CATH_4_1 directory
