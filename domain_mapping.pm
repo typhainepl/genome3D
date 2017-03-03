@@ -22,29 +22,11 @@ sub mapping{
 
 	print "Calculate domain mapping\n";
 
-	# get full length_Cath
-	my $segment_cath = $pdbe_dbh->prepare("select distinct * from $segment_cath_db");
-	$segment_cath->execute();
+	# get full length_Cath for each domain
+	%length_Cath = getSegmentLength($pdbe_dbh,$segment_cath_db);
 
-	while ( my $xref_row = $segment_cath->fetchrow_hashref ) {
-		my $CD = $xref_row->{CATH_DOMAIN};
-		my $SiftsLength = $xref_row->{SIFTS_LENGTH};
-		if (!defined $length_Cath{$CD}) {$length_Cath{$CD} = $SiftsLength;}
-		else {$length_Cath{$CD} = $length_Cath{$CD} + $SiftsLength; }
-	}
-	# end get full length_Cath
-
-	# get full length_Scop
-	my $segment_scop = $pdbe_dbh->prepare("select distinct * from $segment_scop_db");
-	$segment_scop->execute();
-
-	while ( my $xref_row = $segment_scop->fetchrow_hashref ) {
-		my $SI = $xref_row->{SCOP_ID};
-		my $SiftsLength = $xref_row->{SIFTS_LENGTH};
-	 	if (!defined $length_Scop{$SI}) {$length_Scop{$SI} = $SiftsLength;}
-	 	else {$length_Scop{$SI} = $length_Scop{$SI} + $SiftsLength; }
-	}
-	# end get full length_Scop
+	# get full length_Scop for each domain
+	%length_Scop = getSegmentLength($pdbe_dbh,$segment_scop_db);
 
 	# select data from segment_cath_scop
 	my $seq_table = $pdbe_dbh->prepare("select distinct * from $combined_segment_db");
@@ -53,18 +35,18 @@ sub mapping{
 	while ( my $xref_row = $seq_table->fetchrow_hashref ) {
 
 		my $CathOrd = $xref_row->{CATH_DOMAIN}."-".$xref_row->{CATH_ORDINAL};
-		my $ScopOrd = $xref_row->{SCOP_ID}."-".$xref_row->{SCOP_ORDINAL};
+		my $ScopOrd = $xref_row->{SCOP_DOMAIN}."-".$xref_row->{SCOP_ORDINAL};
 		my $key = $CathOrd.$ScopOrd;
 
 		$data{$key}{CD} = $xref_row->{CATH_DOMAIN};
-		$data{$key}{SI} = $xref_row->{SCOP_ID};
-		$data{$key}{S}  = $xref_row->{SUNID};
+		$data{$key}{SD} = $xref_row->{SCOP_DOMAIN};
 		$data{$key}{CO} = $xref_row->{CATH_ORDINAL};
 		$data{$key}{SO} = $xref_row->{SCOP_ORDINAL};
 		$data{$key}{CL} = $xref_row->{CATH_LENGTH};
 		$data{$key}{SL} = $xref_row->{SCOP_LENGTH};
 		$data{$key}{CATHCODE} = $xref_row->{CATHCODE};
 		$data{$key}{SCCS} = $xref_row->{SCCS};
+		$data{$key}{SSF} = $xref_row->{SSF};
 
 		my $CS = $data{$key}{CS} = $xref_row->{CATH_START};
 	 	my $CE = $data{$key}{CE} = $xref_row->{CATH_END};
@@ -139,7 +121,7 @@ sub mapping{
 			$data{$key}{pc_scopOrd} = ( $OverlapLength / $data{$key}{SL} ) * 100;
 
 			# calculate mapped length
-			my $Dom_Combined = $data{$key}{Dom_Combined} = $data{$key}{CD}."-".$data{$key}{SI};
+			my $Dom_Combined = $data{$key}{Dom_Combined} = $data{$key}{CD}."-".$data{$key}{SD};
 
 			my $CathOrd_DomCombined = $CathOrd.$Dom_Combined;
 			my $ScopOrd_DomCombined = $ScopOrd.$Dom_Combined;
@@ -173,8 +155,8 @@ sub mapping{
 	#insert into PDBE_ALL_DOMAIN_MAPPING request
 	my $insert_request = <<"SQL";
 INSERT INTO $domain_mapping_db (
-	cath_domain,scop_id,sunid,cath_ordinal,scop_ordinal,cath_length,scop_length,overlap_length,pc_cath,pc_scop,pc_cath_domain,pc_scop_domain,
-	pc_smaller,pc_bigger,cathcode,sccs
+	cath_domain,scop_domain,cath_ordinal,scop_ordinal,cath_length,scop_length,overlap_length,pc_cath,pc_scop,pc_cath_domain,pc_scop_domain,
+	pc_smaller,pc_bigger,cathcode,sccs,ssf
 	) 
 	values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
 SQL
@@ -187,20 +169,20 @@ SQL
 	 	my $Dom_Combined = $data{$key}{Dom_Combined};
 
 		my $pc_cathDom = ($length_CathMapped{$Dom_Combined}/$length_Cath{$data{$key}{CD}})*100;
-		my $pc_scopDom = ($length_ScopMapped{$Dom_Combined}/$length_Scop{$data{$key}{SI}})*100;
+		my $pc_scopDom = ($length_ScopMapped{$Dom_Combined}/$length_Scop{$data{$key}{SD}})*100;
 		
 		my ($pc_smaller,$pc_bigger);
 
-		if ($length_Cath{$data{$key}{CD}}<$length_Scop{$data{$key}{SI}}) {
+		if ($length_Cath{$data{$key}{CD}}<$length_Scop{$data{$key}{SD}}) {
 			$pc_smaller = $pc_cathDom;
 			$pc_bigger  = $pc_scopDom;
 		}
 
-		elsif ($length_Scop{$data{$key}{SI}}<$length_Cath{$data{$key}{CD}}) {
+		elsif ($length_Scop{$data{$key}{SD}}<$length_Cath{$data{$key}{CD}}) {
 			$pc_smaller = $pc_scopDom;
 			$pc_bigger  = $pc_cathDom;
 		}
-		elsif ($length_Scop{$data{$key}{SI}} eq $length_Cath{$data{$key}{CD}}) {
+		elsif ($length_Scop{$data{$key}{SD}} eq $length_Cath{$data{$key}{CD}}) {
 			$pc_smaller = $pc_scopDom;
 			$pc_bigger  = $pc_cathDom;
 		}
@@ -208,8 +190,7 @@ SQL
 		#insert data in the table
 		$sth_insert->execute(
 			$data{$key}{CD},
-			$data{$key}{SI},
-			$data{$key}{S},
+			$data{$key}{SD},
 			$data{$key}{CO},
 			$data{$key}{SO},
 			$data{$key}{CL},
@@ -222,9 +203,28 @@ SQL
 			$pc_smaller,
 			$pc_bigger,
 			$data{$key}{CATHCODE},
-			$data{$key}{SCCS}
+			$data{$key}{SCCS},
+			$data{$key}{SSF}
 		); 
 	}
 }
 
+sub getSegmentLength{
+	my ($pdbe_dbh,$table) = @_;
+
+	my %length;
+
+	# get full length of each domain (combined ordinals)
+	my $segment = $pdbe_dbh->prepare("select distinct * from $table");
+	$segment->execute();
+
+	while ( my $xref_row = $segment->fetchrow_hashref ) {
+		my $SD = $xref_row->{DOMAIN};
+		my $row_length = $xref_row->{LENGTH};
+	 	if (!defined $length{$SD}) {$length{$SD} = $row_length;}
+	 	else {$length{$SD} = $length{$SD} + $row_length; }
+	}
+
+	return %length;
+}
 1;

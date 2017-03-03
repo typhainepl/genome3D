@@ -28,72 +28,62 @@ sub createTables{
 	# ---- create tables ----
  	my $create_segment_cath = <<"SQL";
 CREATE TABLE $segment_cath_db(
- 	cath_domain varchar(10),
+ 	domain varchar(10),
  	ordinal number(38,0),
  	entry_id varchar(4),
  	auth_asym_id varchar(5),
- 	sifts_start number(38,0),
- 	sifts_end number(38,0), 
- 	beg_ins_code varchar(1),
- 	end_ins_code varchar(1),
- 	sifts_length number(38,0),
+ 	"START" number(38,0),
+ 	"END" number(38,0), 
+ 	length number(38,0),
  	cathcode varchar(20)
  )
 SQL
  
-# 	$pdbe_dbh->do($create_segment_cath) or die "Can't create $segment_cath_db table\n\n";
+	$pdbe_dbh->do($create_segment_cath) or die "Can't create $segment_cath_db table\n\n";
 
 	my $create_segment_scop = <<"SQL";
 CREATE TABLE $segment_scop_db(
- 	sunid number(38,0),
- 	scop_id varchar(8),
+ 	domain number(38,0),
  	ordinal number(38,0),
  	entry_id varchar(4),
  	auth_asym_id varchar(5),
- 	sifts_start number(38,0),
- 	sifts_end number(38,0),
- 	beg_ins_code varchar(1),
- 	end_ins_code varchar(1),
- 	sifts_length number(38,0),
- 	sccs varchar(20)
+ 	"START" number(38,0),
+ 	"END" number(38,0),
+ 	length number(38,0),
+ 	sccs varchar(20),
+ 	SSF number(38,0)
 )
 SQL
 
-#	$pdbe_dbh->do($create_segment_scop) or die "Can't create $segment_scop_db table\n\n";
+	$pdbe_dbh->do($create_segment_scop) or die "Can't create $segment_scop_db table\n\n";
 
 
-	my $create_segment_cath_scop = <<"SQL";
+my $create_segment_cath_scop = <<"SQL";
 CREATE TABLE $combined_segment_db(
- 	cath_domain varchar(10),
- 	cath_ordinal number,
- 	scop_id varchar(10),
- 	sunid number,
- 	scop_ordinal number,
- 	auth_asym_id varchar(3),
- 	entry_id varchar(4),
- 	cath_start number,
- 	cath_end number,
- 	cath_start_ins_code varchar(1),
- 	cath_end_ins_code Varchar(1),
- 	scop_start number,
- 	scop_end number,
- 	scop_start_ins_code varchar(1),
- 	scop_end_ins_code varchar(1),
- 	cath_length number,
- 	scop_length number,
- 	cathcode varchar(20),
- 	sccs varchar(20)
+	cath_domain varchar(10),
+	cath_ordinal number,
+	scop_domain number,
+	scop_ordinal number,
+	entry_id varchar(4),
+	auth_asym_id varchar(3),
+	cath_start number,
+	cath_end number,
+	cath_length number,
+	scop_start number,
+	scop_end number,
+	scop_length number,
+	cathcode varchar(20),
+	sccs varchar(20),
+	ssf number
 )
 SQL
 
 	$pdbe_dbh->do($create_segment_cath_scop) or die "Can't create $combined_segment_db table\n\n";
 
-
 	my $create_domain_mapping = <<"SQL";
 CREATE TABLE $domain_mapping_db( 
  	cath_domain varchar(10),
- 	scop_id varchar(8),
- 	sunid number,
+ 	scop_domain number,
  	cath_ordinal number,
  	scop_ordinal number,
  	cath_length number,
@@ -106,7 +96,8 @@ CREATE TABLE $domain_mapping_db(
  	pc_smaller number,
  	pc_bigger number,
  	cathcode varchar(20),
- 	sccs varchar(20)
+ 	sccs varchar(20),
+ 	ssf number
 )
 SQL
 
@@ -116,7 +107,7 @@ SQL
 CREATE TABLE $node_mapping_db(
  	cath_dom varchar(50),
  	scop_dom varchar(50),
- 	scop_superfamily_id number,
+ 	ssf number,
  	average_cath_length number,
  	average_scop_length number,
  	num_cath_node_domains number,
