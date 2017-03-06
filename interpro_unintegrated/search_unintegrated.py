@@ -6,6 +6,7 @@
 #######################################################################################
 
 import re
+import comparepfam
 
 def getUnintegrated(pdbecursor,ipprocursor,nodes,unintegrated_file):
 
@@ -33,6 +34,7 @@ def getUnintegrated(pdbecursor,ipprocursor,nodes,unintegrated_file):
 	unintegrated_pair=0
 	notInDb_cath=0
 	notInDb_scop=0
+	interpro_nodes=[]
 
 	toReturn=[]
 
@@ -41,6 +43,7 @@ def getUnintegrated(pdbecursor,ipprocursor,nodes,unintegrated_file):
 			#search corresponding SSF signature
 			scopSSF = getSSF(pdbecursor,value)
 			scop_search = "SSF"+str(scopSSF)
+			interpro_nodes.append(scop_search)
 
 			ipprocursor.execute(get_unintegrated,('Y',scop_search)) or die
 			get_unintegrated_sth = ipprocursor.fetchall()
@@ -48,10 +51,10 @@ def getUnintegrated(pdbecursor,ipprocursor,nodes,unintegrated_file):
 			if toPrintScop != '':
 				toPrintScop+="\n"
 
-			toPrintScop+="|| "+scop_search+" || "
+			toPrintScop+="|| "
 
 			for row_ippro in get_unintegrated_sth:
-
+				nbprot = ''
 				#get the number of protein corresponding to this signature
 				ipprocursor.execute(get_nb_protein,search=scop_search)
 				get_nb_protein_sth = ipprocursor.fetchall()
@@ -59,14 +62,14 @@ def getUnintegrated(pdbecursor,ipprocursor,nodes,unintegrated_file):
 				for row_prot in get_nb_protein_sth:
 					#if protein found => print the number
 					if row_prot[0]:
-						toPrintScop+= str(row_prot[0]) + " || "
+						nbprot = str(row_prot[0])
 
 				#if found signature but no corresponding InterPro identifier => unintegrated
 				if not row_ippro[0]:
-					toPrintScop+= "|| || ||"
+					toPrintScop+= "UNINTEGRATED: "+scop_search+" || "+nbprot+" || || || || ||" 
 					unintegrated_scop+=1
 				else:
-					toPrintScop+= row_ippro[0]+" || none || ||"
+					toPrintScop+= scop_search+" || "+nbprot+" || || "+row_ippro[0]+" || none || || ||"
 
 		else:
 			#search corresponding GENE3D signature
@@ -74,6 +77,7 @@ def getUnintegrated(pdbecursor,ipprocursor,nodes,unintegrated_file):
 				cluster_node=value
 
 			cath_search = "G3DSA:"+str(value)
+			interpro_nodes.append(cath_search)
 
 			ipprocursor.execute(get_unintegrated,('X',cath_search)) or die
 			get_unintegrated_sth = ipprocursor.fetchall()
@@ -81,10 +85,10 @@ def getUnintegrated(pdbecursor,ipprocursor,nodes,unintegrated_file):
 			if toPrintCath != '':
 				toPrintCath+="\n"
 
-			toPrintCath+="|| "+cath_search+" || "
+			toPrintCath+="|| "
 
 			for row_ippro in get_unintegrated_sth:
-				
+				nbprot = ''
 				#get the number of protein corresponding to this signature
 				ipprocursor.execute(get_nb_protein,search=cath_search)
 				get_nb_protein_sth = ipprocursor.fetchall()
@@ -92,14 +96,14 @@ def getUnintegrated(pdbecursor,ipprocursor,nodes,unintegrated_file):
 				for row_prot in get_nb_protein_sth:
 					#if protein found => print the number
 					if row_prot[0]:
-						toPrintCath+= str(row_prot[0]) + " || "
+						nbprot= str(row_prot[0])
 
 				#if found signature but no corresponding InterPro identifier => unintegrated
 				if not row_ippro[0]:
-					toPrintCath+= "|| || ||"
+					toPrintCath+= "UNINTEGRATED: "+cath_search+" || "+nbprot+" || || || || ||"
 					unintegrated_cath+=1
 				else:
-					toPrintCath+= row_ippro[0]+" || none || ||"
+					toPrintCath+= cath_search+" || "+nbprot+" || || "+row_ippro[0]+" || none || || ||"
 		
 	#determine if unintegrated pair
 	total = unintegrated_cath + unintegrated_scop
@@ -109,6 +113,7 @@ def getUnintegrated(pdbecursor,ipprocursor,nodes,unintegrated_file):
 
 	#print in file
 	if unintegrated_cath != 0 or unintegrated_scop != 0:
+# 		comparepfam.comparePositions(ipprocursor,interpro_nodes)
 		file.write("|-----------------------------------------------------------\n")
 		file.write("{{{#!th rowspan="+str(len(nodes))+"\n")
 		file.write("[cluster:"+str(cluster_node)+" "+str(cluster_node)+"]\n")

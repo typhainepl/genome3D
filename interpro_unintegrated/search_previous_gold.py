@@ -13,13 +13,15 @@ import sys
 import re
 import search_unintegrated
 
+previous_file = sys.argv[1]
+new_file = sys.argv[2]
 dirname = os.path.dirname(__file__)
 if not dirname:
     dirname = '.'
 
-directoryToPrint = dirname +"/"
-unintegrated_gold_blocks_file = directoryToPrint+"unintegrated_gold_new"
-unintegrated_previous = directoryToPrint+"unintegrated_previous"
+directoryToPrint = dirname +"/unintegrated/"
+unintegrated_gold_blocks_file = directoryToPrint+new_file
+unintegrated_previous = directoryToPrint+previous_file
 
 previous = open (unintegrated_previous,'r')
 goldFile = open (unintegrated_gold_blocks_file,'r')
@@ -28,16 +30,16 @@ gold_new = []
 gold_old = []
 
 for row in goldFile:
-	pattern = re.match("^\n$",row)
-	new = row.strip(" \n")
-	if not pattern:
-		gold_new.append(new)
+    pattern = re.search("(G3DSA:\d{1}\.\d+\.\d+\.\d+|SSF\d+)",row)
+    if pattern:
+#         print pattern.group(1)
+        gold_new.append(pattern.group(1))
 
 for row in previous:
-	pattern = re.match("^\n$",row)
-	new = row.strip(" \n")
-	if not pattern:
-		gold_old.append(new)
+    pattern = re.search("(G3DSA:\d{1}\.\d+\.\d+\.\d+|SSF\d+)",row)
+    if pattern:
+#         print pattern.group(1)
+        gold_old.append(pattern.group(1))
 # print gold_old
 
 for row in gold_new:
