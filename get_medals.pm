@@ -13,7 +13,7 @@ use DBI;
 sub getMedals{
 	my ($pdbe_dbh,$node_mapping_db) = @_;
 
-	my ($gold,$silver,$bronze,$classified,$total)=0;
+	my ($gold,$silver,$bronze,$classified,$total)=(0)x5;
 
 	my $medal_sth = $pdbe_dbh->prepare("select * from $node_mapping_db");	
 	$medal_sth->execute();

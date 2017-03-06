@@ -23,7 +23,8 @@ use get_gold_clusters;
 
 
 # connexion to the database
-my %config = do './config.pl';    
+my $path="/nfs/msd/work2/typhaine/genome3D/";
+my %config = do $path."/config.pl";    
 my $pdbe_dbh = DBI->connect("DBI:Oracle:".$config{db}, $config{user}, $config{password});
 
 my $datestart = localtime();
@@ -44,7 +45,6 @@ foreach my $t (@tables){
 	$tables_new{$t}=$t.'_NEW';
 }
 
-my $path="./";
 my $mdaDirectory = $path."MDA_results/CATH_4_1/";
 my $blockFile = $mdaDirectory."mda_blocks.list";
 my $blockInfo = $mdaDirectory."mda_info.list";
