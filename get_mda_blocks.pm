@@ -44,9 +44,9 @@ sub getMDABlocks{
 	$scop_sth->execute();
 
 	while ( my $xref_row = $scop_sth->fetchrow_hashref ) {
-		my $ScopID = $xref_row->{SCOP_ID};
-		my $SiftsStart = $xref_row->{SIFTS_START};
-		my $SiftsEnd = $xref_row->{SIFTS_END};
+		my $ScopID = $xref_row->{DOMAIN};
+		my $SiftsStart = $xref_row->{START};
+		my $SiftsEnd = $xref_row->{END};
 		my $SiftLength = $SiftsEnd - $SiftsStart;
 
 		my $EntryID = $xref_row->{ENTRY_ID};
@@ -80,9 +80,9 @@ sub getMDABlocks{
 	$cath_sth->execute();
 
 	while ( my $xref_row = $cath_sth->fetchrow_hashref ) {
-		my $CathID = $xref_row->{CATH_DOMAIN};
-		my $SiftsStart = $xref_row->{SIFTS_START};
-		my $SiftsEnd = $xref_row->{SIFTS_END};
+		my $CathID = $xref_row->{DOMAIN};
+		my $SiftsStart = $xref_row->{START};
+		my $SiftsEnd = $xref_row->{END};
 		my $SiftLength = $SiftsEnd - $SiftsStart;
 
 		my $Ordinal = $xref_row->{ORDINAL};
@@ -110,7 +110,7 @@ sub getMDABlocks{
 	while ( my $xref_row = $map_sth->fetchrow_hashref ) {
 		my $CathID = $xref_row->{CATH_DOMAIN}; 
 		my $CathOrdinal = $xref_row->{CATH_ORDINAL}; 
-		my $ScopID = $xref_row->{SCOP_ID};
+		my $ScopID = $xref_row->{SCOP_DOMAIN};
 		my $ScopOrdinal = $xref_row->{SCOP_ORDINAL}; 
 		my $PCSmaller = $xref_row->{PC_SMALLER};
 

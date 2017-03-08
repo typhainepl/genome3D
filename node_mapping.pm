@@ -66,7 +66,7 @@ sub nodeMapping{
 		my $pcCath = $mapped_together_row->{PC_CATH_DOMAIN};
 		$CathDom_Ordinal = $CathDomain."-".$CathOrdinal;
 
-		my $ScopID = $mapped_together_row->{SCOP_ID};
+		my $ScopDomain = $mapped_together_row->{SCOP_DOMAIN};
 		my $ScopFamily = $mapped_together_row->{SCCS};
 		if ($ScopFamily =~ /(.\.\d+\.\d+)\./) {$ScopSuperfamily = $1;}
 
@@ -76,7 +76,7 @@ sub nodeMapping{
 		my $ScopOrdinal = $mapped_together_row->{SCOP_ORDINAL};
 		my $ScopLength = $mapped_together_row->{SCOP_LENGTH};
 		my $pcScop = $mapped_together_row->{PC_SCOP_DOMAIN};
-		$ScopDom_Ordinal = $ScopID."-".$ScopOrdinal;
+		$ScopDom_Ordinal = $ScopDomain."-".$ScopOrdinal;
 
 		my $matched_SF = $CathSuperfamily.";".$ScopSuperfamily;
 		my $matched_DomOrd = $CathDom_Ordinal.";".$ScopDom_Ordinal;
@@ -219,7 +219,7 @@ sub nodeMapping{
 INSERT INTO $node_mapping_db (
 	cath_dom,
 	scop_dom,
-	scop_superfamily_id,
+	ssf,
 	average_cath_length,
 	average_scop_length,
 	num_cath_node_domains,
@@ -256,7 +256,7 @@ SQL
 
 		my ($CathSuperfamily, $ScopSuperfamily) = split(/;/,$k1);
 
-		my $scop_superfamily_id = get_superfamily_id($pdbe_dbh,$ScopSuperfamily);
+		my $scop_superfamily_id = get_superfamily_id($pdbe_dbh,$ScopSuperfamily,$domain_mapping_db);
 
 		my ($equivScopNodeCath,$equivCathNodeScop,$mutual,$medal_range);
 		if ($EquivMax{$CathSuperfamily} eq $k1) { $equivScopNodeCath = "t";	}
@@ -312,22 +312,13 @@ SQL
 
 sub get_superfamily_id{
 	#return the scop superfamily id corresponding to the SCCS
-	my ($pdbe_dbh, $scop)=@_;
+	my ($pdbe_dbh, $scop, $domain_mapping_db)=@_;
 
-	my $request = $pdbe_dbh->prepare("select distinct superfamily_id,sccs from SCOP_CLASS");
+	my $request = $pdbe_dbh->prepare("select ssf from $domain_mapping_db where sccs like '$scop%' ");
 	$request->execute() or die;
 
 	while (my $all_row = $request->fetchrow_hashref){
-		my $sccs = $all_row->{SCCS};
-		my $superfamily = $all_row->{SUPERFAMILY_ID};
-
-		if ($sccs =~ /(.\.\d+\.\d+)\./) {$sccs = $1;}
-		# print $sccs."\t";
-		
-		if($sccs eq $scop){
-			return $superfamily;
-		}
-		
+		return $all_row->{SSF};
 	}
 	return 0;
 
@@ -379,18 +370,18 @@ sub cathScopAll{
 		my ($domain,$superfamily);
 
 		if ($segment_db =~ /CATH/){
-			$domain = $all_row->{CATH_DOMAIN};
+			$domain = $all_row->{DOMAIN};
 			$superfamily = $all_row->{CATHCODE};
 		}
 		else{
-			$domain = $all_row->{SCOP_ID};
+			$domain = $all_row->{DOMAIN};
 			my $family = $all_row->{SCCS};
 			if ($family =~ /(.\.\d+\.\d+)\./) {$superfamily = $1;}
 		}
 
 		my $ordinal = $all_row->{ORDINAL};
 		my $entry = $all_row->{ENTRY_ID};
-		my $SiftsLength = $all_row->{SIFTS_LENGTH};
+		my $SiftsLength = $all_row->{LENGTH};
 
 		if (!defined $superfamily){print "pb superfamily not defined\n";}
 		
@@ -453,13 +444,13 @@ sub mapped_any {
 		$CathDom_Ordinal = $CathDomain.";".$CathOrdinal;
 		$hrefAllMapped->{"Cath"}->{ $CathSuperfamily }->{ $CathDom_Ordinal }    = $CathLength;
 
-		my $ScopID = $mapped_row->{SCOP_ID};
+		my $ScopDomain = $mapped_row->{SCOP_DOMAIN};
 		my $ScopFamily = $mapped_row->{SCCS};
 		if ($ScopFamily =~ /(.\.\d+\.\d+)\./) {$ScopSuperfamily = $1;}
 		my $ScopOrdinal = $mapped_row->{SCOP_ORDINAL};
 		my $ScopLength = $mapped_row->{SCOP_LENGTH};
 
-		$ScopDom_Ordinal = $ScopID.";".$ScopOrdinal;
+		$ScopDom_Ordinal = $ScopDomain.";".$ScopOrdinal;
 		$hrefAllMapped->{"Scop"}->{ $ScopSuperfamily }->{ $ScopDom_Ordinal }    = $ScopLength;
 	}
 	my $seq_length = 0;
