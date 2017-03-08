@@ -73,7 +73,12 @@ where
   si.pdb_seq_id in (e.\"START\", e.\"END\") and
   si.auth_seq_id in (s.beg_seq, s.end_seq) and
   ((si.auth_seq_id_ins_code in (s.beg_ins_code, s.end_ins_code)) or (si.auth_seq_id_ins_code = ' ' and (s.beg_ins_code is null or s.end_ins_code is null))) and
+<<<<<<< HEAD
   si.canonical_acc = 1";
+=======
+  si.canonical_acc = 1
+  and e.entry_id='2r3y'";
+>>>>>>> branch 'test' of https://github.com/typhainepl/genome3D.git
 
 	$request .= $where;
 	# print $request;

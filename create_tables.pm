@@ -39,7 +39,7 @@ CREATE TABLE $segment_cath_db(
  )
 SQL
  
-# 	$pdbe_dbh->do($create_segment_cath) or die "Can't create $segment_cath_db table\n\n";
+	$pdbe_dbh->do($create_segment_cath) or die "Can't create $segment_cath_db table\n\n";
 
 	my $create_segment_scop = <<"SQL";
 CREATE TABLE $segment_scop_db(
@@ -55,7 +55,7 @@ CREATE TABLE $segment_scop_db(
 )
 SQL
 
-#	$pdbe_dbh->do($create_segment_scop) or die "Can't create $segment_scop_db table\n\n";
+	$pdbe_dbh->do($create_segment_scop) or die "Can't create $segment_scop_db table\n\n";
 
 
 my $create_segment_cath_scop = <<"SQL";

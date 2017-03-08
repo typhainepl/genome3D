@@ -319,6 +319,19 @@ sub get_superfamily_id{
 
 	while (my $all_row = $request->fetchrow_hashref){
 		return $all_row->{SSF};
+<<<<<<< HEAD
+=======
+		# my $sccs = $all_row->{SCCS};
+		# my $superfamily = $all_row->{SUPERFAMILY_ID};
+
+		# if ($sccs =~ /(.\.\d+\.\d+)\./) {$sccs = $1;}
+		# # print $sccs."\t";
+		
+		# if($sccs eq $scop){
+		# 	return $superfamily;
+		# }
+		
+>>>>>>> branch 'test' of https://github.com/typhainepl/genome3D.git
 	}
 	return 0;
 
