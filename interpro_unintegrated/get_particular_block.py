@@ -24,7 +24,7 @@ def getNbBlocks(pdbecursor,clusternode):
 	#get the number of blocks in a give cluster
 	nbBlock = 0
 
-	getCount = "select count(block) as nb_block from cluster_block_new where cluster_node=:clusternode"
+	getCount = "select count(block) as nb_block from cluster_block_test where cluster_node=:clusternode"
 	pdbecursor.execute(getCount,clusternode=clusternode)
 	getCount_sth = pdbecursor.fetchall()
 
@@ -60,7 +60,7 @@ def haveSameNumberOfDomains(nodes):
 
 def whiteSpace(pdbecursor,block):
 	#search is there is a domain not in this cluster in the block
-	getBlockPositions = "select positionCath,positionScop from mda_block_new where block=:block"
+	getBlockPositions = "select positionCath,positionScop from mda_block_test where block=:block"
 
 	pdbecursor.execute(getBlockPositions,block=block)
 	blockpos = pdbecursor.fetchall()
@@ -107,7 +107,7 @@ def getUnintegratedBlocks(pdbecursor, ipprocursor, clusternode, number, unintegr
 	seen = []
 
 	# select the different blocks in the cluster
-	getBlocks = "select block from cluster_block_new where cluster_node=:clusternode"
+	getBlocks = "select block from cluster_block_test where cluster_node=:clusternode"
 	pdbecursor.execute(getBlocks, clusternode=clusternode)
 	getBlocks_sth = pdbecursor.fetchall()
 
@@ -169,7 +169,7 @@ def getUnintegratedBlocks(pdbecursor, ipprocursor, clusternode, number, unintegr
 def getCluster(pdbecursor,ipprocursor,number,file):
 	#get all the clusters with same number of CATH and SCOP SF
 
-	getNodes = "select * from cluster_new order by cluster_node asc"
+	getNodes = "select * from cluster_test order by cluster_node asc"
 	pdbecursor.execute(getNodes)
 	get_nodes_sth=pdbecursor.fetchall()
 
