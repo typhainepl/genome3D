@@ -38,14 +38,19 @@ my @tables = ('SEGMENT_CATH','SEGMENT_SCOP','SEGMENT_CATH_SCOP','PDBE_ALL_DOMAIN
 my %tables_new;
 
 foreach my $t (@tables){
-	# my $drop = 'DROP TABLE '.$t.'_TEST';
+	my $drop = 'DROP TABLE '.$t.'_TEST';
 	# my $drop = 'DROP TABLE '.$t.'_OLD';
 	# my $alter = 'ALTER TABLE '.$t.'_NEW rename to '.$t.'_OLD';
-	# $pdbe_dbh->do($drop) or die "Can't delete ".$t."_OLD table\n\n";
+	$pdbe_dbh->do($drop) or die "Can't delete ".$t."_TEST table\n\n";
 	# $pdbe_dbh->do($alter) or die "Can't rename ".$t."_NEW table\n\n";
 	$tables_new{$t}=$t.'_TEST';
 }
 
+#$pdbe_dbh->do("drop table SEGMENT_CATH_SCOP_TEST") or die;
+#$pdbe_dbh->do("drop table SEGMENT_CATH_TEST") or die;
+#$pdbe_dbh->do("drop table SEGMENT_SCOP_TEST") or die;
+#$pdbe_dbh->do("drop table PDBE_ALL_DOMAIN_MAPPING_TEST") or die;
+#$pdbe_dbh->do("drop table PDBE_ALL_NODE_MAPPING_TEST") or die;
 #$pdbe_dbh->do("drop table BLOCK_CHAIN_NEW") or die;
 #$pdbe_dbh->do("drop table BLOCK_UNIPROT_NEW") or die;
 #$pdbe_dbh->do("drop table MDA_BLOCK_NEW") or die;
@@ -58,15 +63,9 @@ my $mdaDirectory = $path."MDA_results/CATH_test/";
 my $blockFile = $mdaDirectory."mda_blocks.list";
 my $blockInfo = $mdaDirectory."mda_info.list";
 my $goldFile = $mdaDirectory."gold.list";
-my $clusterFile=$path."cluster_test";
 my $representative = $path."representative/representative_list";
 
 #create tables
-$pdbe_dbh->do("drop table SEGMENT_CATH_SCOP_TEST") or die;
-$pdbe_dbh->do("drop table SEGMENT_CATH_TEST") or die;
-$pdbe_dbh->do("drop table SEGMENT_SCOP_TEST") or die;
-$pdbe_dbh->do("drop table PDBE_ALL_DOMAIN_MAPPING_TEST") or die;
-$pdbe_dbh->do("drop table PDBE_ALL_NODE_MAPPING_TEST") or die;
 create_tables::createTables($pdbe_dbh,%tables_new);
 
 #create segment tables
@@ -82,24 +81,24 @@ domain_mapping::mapping($pdbe_dbh, $tables_new{'SEGMENT_SCOP'},$tables_new{'SEGM
 node_mapping::nodeMapping($pdbe_dbh,$tables_new{'SEGMENT_SCOP'},$tables_new{'SEGMENT_CATH'}, $tables_new{'PDBE_ALL_DOMAIN_MAPPING'},$tables_new{'PDBE_ALL_NODE_MAPPING'});
 
 #clustering
-# clustering::clustering($pdbe_dbh,$tables_new{'PDBE_ALL_NODE_MAPPING'},$clusterFile,$tables_new{'CLUSTER'});
+clustering::clustering($pdbe_dbh,$tables_new{'PDBE_ALL_NODE_MAPPING'},$tables_new{'CLUSTER'});
 
-# #get medal equivalence
-# get_medals::getMedals($pdbe_dbh,$tables_new{'PDBE_ALL_NODE_MAPPING'});
+#get medal equivalence
+#get_medals::getMedals($pdbe_dbh,$tables_new{'PDBE_ALL_NODE_MAPPING'});
 
-# #get MDA blocks
-#get_mda_blocks::getMDABlocks($pdbe_dbh, $mdaDirectory, $representative, %tables_new);
+#get MDA blocks
+get_mda_blocks::getMDABlocks($pdbe_dbh, $mdaDirectory, $representative, %tables_new);
 
 #print MDA blocks info into files
-# cleanDirectory($mdaDirectory);
+cleanDirectory($mdaDirectory);
 
-# get_mda_blocks::printMDABlocks($mdaDirectory, $pdbe_dbh, %tables_new);
+get_mda_blocks::printMDABlocks($mdaDirectory, $pdbe_dbh, %tables_new);
 
 #print other mda info (one instance, equivalent split, class4...)
-# get_chop_homo::getChopping($pdbe_dbh,$mdaDirectory, $representative, %tables_new);
+get_chop_homo::getChopping($pdbe_dbh,$mdaDirectory, $representative, %tables_new);
 
 #print equivalent gold pairs cluster blocks
-# get_gold_clusters::get_gold_clusters($pdbe_dbh,$blockFile,$goldFile, $tables_new{'PDBE_ALL_NODE_MAPPING'});
+#get_gold_clusters::get_gold_clusters($pdbe_dbh,$blockFile,$goldFile, $tables_new{'PDBE_ALL_NODE_MAPPING'});
 
 my $dateend = localtime();
 print "Mapping process finished at $dateend\n";
