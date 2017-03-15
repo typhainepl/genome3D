@@ -69,33 +69,33 @@ my $representative = $path."representative/representative_list";
 #create_tables::createTables($pdbe_dbh,%tables_new);
 
 #create segment tables
-#get_segment::getSegmentTables($pdbe_dbh,$tables_new{'SEGMENT_CATH'});
-#get_segment::getSegmentTables($pdbe_dbh,$tables_new{'SEGMENT_SCOP'});
+get_segment::getSegmentTables($pdbe_dbh,$tables_new{'SEGMENT_CATH'});
+get_segment::getSegmentTables($pdbe_dbh,$tables_new{'SEGMENT_SCOP'});
 
-#get_segment::createCombinedSegment($pdbe_dbh, $tables_new{'SEGMENT_SCOP'},$tables_new{'SEGMENT_CATH'}, $tables_new{'SEGMENT_CATH_SCOP'});
+get_segment::createCombinedSegment($pdbe_dbh, $tables_new{'SEGMENT_SCOP'},$tables_new{'SEGMENT_CATH'}, $tables_new{'SEGMENT_CATH_SCOP'});
 
 # #calculate and create domain mapping
-#domain_mapping::mapping($pdbe_dbh, $tables_new{'SEGMENT_SCOP'},$tables_new{'SEGMENT_CATH'}, $tables_new{'SEGMENT_CATH_SCOP'}, $tables_new{'PDBE_ALL_DOMAIN_MAPPING'});
+domain_mapping::mapping($pdbe_dbh, $tables_new{'SEGMENT_SCOP'},$tables_new{'SEGMENT_CATH'}, $tables_new{'SEGMENT_CATH_SCOP'}, $tables_new{'PDBE_ALL_DOMAIN_MAPPING'});
 
 #node mapping
-#node_mapping::nodeMapping($pdbe_dbh,$tables_new{'SEGMENT_SCOP'},$tables_new{'SEGMENT_CATH'}, $tables_new{'PDBE_ALL_DOMAIN_MAPPING'},$tables_new{'PDBE_ALL_NODE_MAPPING'});
+node_mapping::nodeMapping($pdbe_dbh,$tables_new{'SEGMENT_SCOP'},$tables_new{'SEGMENT_CATH'}, $tables_new{'PDBE_ALL_DOMAIN_MAPPING'},$tables_new{'PDBE_ALL_NODE_MAPPING'});
 
 #clustering
-#clustering::clustering($pdbe_dbh,$tables_new{'PDBE_ALL_NODE_MAPPING'},$tables_new{'CLUSTER'});
+clustering::clustering($pdbe_dbh,$tables_new{'PDBE_ALL_NODE_MAPPING'},$tables_new{'CLUSTER'});
 
 #get medal equivalence
 #get_medals::getMedals($pdbe_dbh,$tables_new{'PDBE_ALL_NODE_MAPPING'});
 
 #get MDA blocks
-get_mda_blocks::getMDABlocks($pdbe_dbh, $mdaDirectory, $representative, %tables_new);
+#get_mda_blocks::getMDABlocks($pdbe_dbh, $mdaDirectory, $representative, %tables_new);
 
 #print MDA blocks info into files
-cleanDirectory($mdaDirectory);
+#cleanDirectory($mdaDirectory);
 
-get_mda_blocks::printMDABlocks($mdaDirectory, $pdbe_dbh, %tables_new);
+#get_mda_blocks::printMDABlocks($mdaDirectory, $pdbe_dbh, %tables_new);
 
 #print other mda info (one instance, equivalent split, class4...)
-get_chop_homo::getChopping($pdbe_dbh,$mdaDirectory, $representative, %tables_new);
+#get_chop_homo::getChopping($pdbe_dbh,$mdaDirectory, $representative, %tables_new);
 
 #print equivalent gold pairs cluster blocks
 #get_gold_clusters::get_gold_clusters($pdbe_dbh,$blockFile,$goldFile, $tables_new{'PDBE_ALL_NODE_MAPPING'});

@@ -112,7 +112,7 @@ SQL
 					my $posbegin ="null";
 					my $posend = "null";
 		
-					foreach my $dom (@domains){
+					foreach my $dom (sort @domains){
 						if ($dom =~ /(.):((-?\d+)-(-?\d+))/){
 							#get the begin and end position of SCOP_DOMAIN for the current AUTH_ASYM_ID
 							if($1 eq $auth && !grep(/^$2$/,@listpos) && $posbegin eq "null" && $posend eq "null"){
@@ -180,12 +180,14 @@ SQL
 	
 		while ( my $row = $sth_get_info_ordinal_2_more->fetchrow_hashref ) {	
 			my $key = $row->{DOMAIN}."-".$row->{ORDINAL};
-			$entry{$key}{ENTRY_ID} = $row->{ENTRY_ID};	
-			$entry{$key}{AUTH} = $row->{AUTH_ASYM_ID};
-			$entry{$key}{START} = $row->{START};
-			$entry{$key}{END} = $row->{END};
-			$entry{$key}{LENGTH} = $row->{LENGTH};
-			$entry{$key}{CATHCODE} = $row->{ACCESSION};
+			if (!$entry{$key}){
+				$entry{$key}{ENTRY_ID} = $row->{ENTRY_ID};	
+				$entry{$key}{AUTH} = $row->{AUTH_ASYM_ID};
+				$entry{$key}{START} = $row->{START};
+				$entry{$key}{END} = $row->{END};
+				$entry{$key}{LENGTH} = $row->{LENGTH};
+				$entry{$key}{CATHCODE} = $row->{ACCESSION};
+			}
 		}
 	}
 	
