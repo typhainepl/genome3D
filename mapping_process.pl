@@ -38,10 +38,10 @@ my @tables = ('SEGMENT_CATH','SEGMENT_SCOP','SEGMENT_CATH_SCOP','PDBE_ALL_DOMAIN
 my %tables_new;
 
 foreach my $t (@tables){
-#	my $drop = 'DROP TABLE '.$t.'_TEST';
+	my $drop = 'DROP TABLE '.$t.'_TEST';
 	# my $drop = 'DROP TABLE '.$t.'_OLD';
 	# my $alter = 'ALTER TABLE '.$t.'_NEW rename to '.$t.'_OLD';
-#	$pdbe_dbh->do($drop) or die "Can't delete ".$t."_TEST table\n\n";
+	$pdbe_dbh->do($drop) or die "Can't delete ".$t."_TEST table\n\n";
 	# $pdbe_dbh->do($alter) or die "Can't rename ".$t."_NEW table\n\n";
 	$tables_new{$t}=$t.'_TEST';
 }
@@ -66,7 +66,7 @@ my $goldFile = $mdaDirectory."gold.list";
 my $representative = $path."representative/representative_list";
 
 #create tables
-#create_tables::createTables($pdbe_dbh,%tables_new);
+create_tables::createTables($pdbe_dbh,%tables_new);
 
 #create segment tables
 get_segment::getSegmentTables($pdbe_dbh,$tables_new{'SEGMENT_CATH'});
