@@ -161,7 +161,7 @@ CREATE TABLE $cluster_block_db(
 )
 SQL
 
-	$pdbe_dbh->do($create_cluster_block) or die "Can't create $cluster_block_db table\n\n";
+#	$pdbe_dbh->do($create_cluster_block) or die "Can't create $cluster_block_db table\n\n";
 
 	my $create_mda_blocks = <<"SQL";
 CREATE TABLE $mda_blocks_db (
@@ -172,7 +172,7 @@ CREATE TABLE $mda_blocks_db (
 )
 SQL
 
-	$pdbe_dbh->do($create_mda_blocks) or die "Can't create $mda_blocks_db table\n\n";
+#	$pdbe_dbh->do($create_mda_blocks) or die "Can't create $mda_blocks_db table\n\n";
 
 	my $create_block_uniprot = <<"SQL";
 CREATE TABLE $block_uniprot_db(
@@ -182,7 +182,7 @@ CREATE TABLE $block_uniprot_db(
 )
 SQL
 
-	$pdbe_dbh->do($create_block_uniprot) or die "Can't create $block_uniprot_db table\n\n";
+#	$pdbe_dbh->do($create_block_uniprot) or die "Can't create $block_uniprot_db table\n\n";
 
 
 	my $create_block_chain = <<"SQL";
@@ -193,7 +193,7 @@ CREATE TABLE $block_chain_db(
 )
 SQL
 
-	$pdbe_dbh->do($create_block_chain) or die "Can't create $block_chain_db table\n\n";
+#	$pdbe_dbh->do($create_block_chain) or die "Can't create $block_chain_db table\n\n";
 
 }
 

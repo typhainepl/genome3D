@@ -36,7 +36,7 @@ sub mapping{
 
 		my $CathOrd = $xref_row->{CATH_DOMAIN}."-".$xref_row->{CATH_ORDINAL};
 		my $ScopOrd = $xref_row->{SCOP_DOMAIN}."-".$xref_row->{SCOP_ORDINAL};
-		my $key = $CathOrd.$ScopOrd;
+		my $key = $CathOrd." ".$ScopOrd;
 
 		$data{$key}{CD} = $xref_row->{CATH_DOMAIN};
 		$data{$key}{SD} = $xref_row->{SCOP_DOMAIN};
@@ -215,7 +215,7 @@ sub getSegmentLength{
 	my %length;
 
 	# get full length of each domain (combined ordinals)
-	my $segment = $pdbe_dbh->prepare("select distinct * from $table");
+	my $segment = $pdbe_dbh->prepare("select distinct * from $table where entry_id='1a3w'");
 	$segment->execute();
 
 	while ( my $xref_row = $segment->fetchrow_hashref ) {

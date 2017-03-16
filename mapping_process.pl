@@ -66,7 +66,7 @@ my $goldFile = $mdaDirectory."gold.list";
 my $representative = $path."representative/representative_list";
 
 #create tables
-#create_tables::createTables($pdbe_dbh,%tables_new);
+create_tables::createTables($pdbe_dbh,%tables_new);
 
 #create segment tables
 get_segment::getSegmentTables($pdbe_dbh,$tables_new{'SEGMENT_CATH'});
