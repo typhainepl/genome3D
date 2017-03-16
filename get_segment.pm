@@ -112,7 +112,7 @@ SQL
 					my $posbegin ="null";
 					my $posend = "null";
 		
-					foreach my $dom (sort @domains){
+					foreach my $dom (@domains){
 						if ($dom =~ /(.):((-?\d+)-(-?\d+))/){
 							#get the begin and end position of SCOP_DOMAIN for the current AUTH_ASYM_ID
 							if($1 eq $auth && !grep(/^$2$/,@listpos) && $posbegin eq "null" && $posend eq "null"){
