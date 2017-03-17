@@ -215,7 +215,7 @@ sub getSegmentLength{
 	my %length;
 
 	# get full length of each domain (combined ordinals)
-	my $segment = $pdbe_dbh->prepare("select distinct * from $table where entry_id='1a3w'");
+	my $segment = $pdbe_dbh->prepare("select distinct * from $table");
 	$segment->execute();
 
 	while ( my $xref_row = $segment->fetchrow_hashref ) {
