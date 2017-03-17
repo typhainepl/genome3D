@@ -112,8 +112,16 @@ SQL
 					my $posbegin ="null";
 					my $posend = "null";
 		
-					# sort the domains
-					my @sortDomains = sort { $a =~ s/(.):(-?\d+)-(-?\d+)/$2/r <=> $b =~ s/(.):(-?\d+)-(-?\d+)/$3/r } @domains;
+					#remove empty domains
+					my @newDomains;
+					
+					foreach my $dom (@domains){
+						if ($dom =~ /^(.):((-?\d+)-(-?\d+))$/){
+							push (@newDomains, $dom);
+						}
+					}
+					#sort the domains
+					my @sortDomains = sort { $a =~ s/(.):(-?\d+)-(-?\d+)/$2/r <=> $b =~ s/(.):(-?\d+)-(-?\d+)/$3/r } @newDomains;
 					
 					foreach my $dom (@sortDomains){
 						if ($dom =~ /(.):((-?\d+)-(-?\d+))/){
