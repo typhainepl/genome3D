@@ -2,7 +2,9 @@
 
 #######################################################################################
 # @author T. Paysan-Lafosse
-# For each cluster, this script get particular blocks (gold, one to many domains between cath and scop MDA blocks)
+# Comparison of files containing unintegratde InterPro entries for GENE3D and SUPERFAMILY databases
+# This script find entries from a file which where not in the previous version of this file
+# take 2 arguments in parameters: old_file and new_file to compare
 #######################################################################################
 
 import urllib2
