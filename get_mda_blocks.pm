@@ -187,54 +187,10 @@ sub getMDABlocks{
 
 					# --------------------Start Printing Top Part Of Chain -----------------------# 
 
-					# my %listscop;
-					# my %listcath;
 					my %listregscop;
 					my %listregcath;
 					my $listcathscopSF;
 
-					#for each domain in the chain
-					# foreach my $element_ord (@{$domain{$chain}}) {					
-					# 	my ($element,$ord) = split (/;/,$element_ord);
-					# 	if (!$seen{$element}) {
-					# 		# print $element;								# 1. print domain name
-					# 		my ($descriptor,$real_region);
-
-					# 		#for each region in the domain, get the end of the region and the superfamily (will be used to make SF sequence concatenation)
-					# 		foreach my $region (@{$region{$element}}) {		
-					# 			my $end;
-					# 			my $reg;
-					# 			($descriptor,$real_region) = split (/::/,$region);
-					# 			if ($element =~ /\./) {
-					# 				if($region=~/(-?\d+[A-Z]?)-(-?\d+[A-Z]?)/){
-					# 					$end = $2;
-					# 					$reg = $region;
-					# 				}
-					# 				# print "($region) ";
-					# 			}
-					# 			else {
-					# 				if($real_region=~/(-?\d+[A-Z]?)-(-?\d+[A-Z]?)/){
-					# 					$end = $2;
-					# 					$reg = $real_region;
-					# 				}
-					# 				# print "($real_region)";					# 2. print region
-					# 			}  
-					# 			if ($SF{$element_ord}=~/^[a-z]/){
-					# 				$listscop{$end} = $SF{$element_ord};
-					# 				$listregscop{$reg} = $SF{$element_ord};					
-					# 			}	
-					# 			else{
-					# 				$listcath{$end}=$SF{$element_ord};
-					# 				$listregcath{$reg}=$SF{$element_ord};
-					# 			}
-					# 		}
-					# 		# print "[$SF{$element_ord}]  ";					# 3. print SF
-							
-					# 		if ($element !~ /\./) {
-					# 			$seen{$element}="seen";
-					# 		}
-					# 	}
-					# }
 					if ($mapped_chainCath{$chain}) {
 						@{$mapped_chainCath{$chain}} = sort { $a->[1] <=> $b->[1] } @{$mapped_chainCath{$chain}};
 					}
@@ -253,7 +209,6 @@ sub getMDABlocks{
 						my $reg = $start."-".$end;
 
 						$listregcath{$reg}=$SF{$domord};
-						# $listcath{$end}=$SF{$domord};
 					}
 					my @sortcath = sortCathScopV2(%listregcath);
 					my $listcathSF = $sortcath[0];
@@ -271,7 +226,6 @@ sub getMDABlocks{
 						my $reg = $start."-".$end;
 
 						$listregscop{$reg} = $SF{$domord};
-						# $listscop{$end} = $SF{$domord};
 					}
 					my @sortscop = sortCathScopV2(%listregscop);
 					my $listscopSF = $sortscop[0];
@@ -379,7 +333,7 @@ sub getUniprot{
 	my $chain_num = substr($chain,-1);
 	my $uniprot = "None";
 
-	my $get_uniprot = $pdbe_dbh->prepare("select accession from sifts_xref_residue where entry_id=? and AUTH_ASYM_ID=? and accession is not null");
+	my $get_uniprot = $pdbe_dbh->prepare("select accession from sifts_admin_new.sifts_xref_residue where entry_id=? and AUTH_ASYM_ID=? and accession is not null");
 	$get_uniprot->execute($pdb,$chain_num);
 	
 	while (my $row = $get_uniprot->fetchrow_hashref) {
@@ -431,7 +385,7 @@ sub getCoverage{
 	my $coverage = 0;
 
 	#get the coverage percentage of the uniprot domain by the chain
-	my $search_coverage = $pdbe_dbh->prepare("select coverage from coverage where ENTRY_ID=? and AUTH_ASYM_ID=?");
+	my $search_coverage = $pdbe_dbh->prepare("select coverage from sifts_admin_new.coverage where ENTRY_ID=? and AUTH_ASYM_ID=?");
 	$search_coverage->execute($pdb,$chainid);
 
 	while (my $row = $search_coverage->fetchrow_hashref) {
@@ -505,7 +459,7 @@ sub printMDABlocks{
 
 	my $get_count_mda_block_sth = $pdbe_dbh->prepare("select count(*) from $cluster_block_db where cluster_node=?") or die;
 
-	my $get_total_uniprotid_cluster = $pdbe_dbh->prepare("select count(distinct(accession)) from sifts_xref_residue sxr
+	my $get_total_uniprotid_cluster = $pdbe_dbh->prepare("select count(distinct(accession)) from sifts_admin_new.sifts_xref_residue sxr
 join block_chain_new bc 
 on substr(bc.chain_id,0,4)=sxr.entry_id and substr(bc.chain_id,5,5)=sxr.auth_asym_id
 join cluster_block_new cb on cb.block=bc.block

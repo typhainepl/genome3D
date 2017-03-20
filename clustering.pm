@@ -10,7 +10,7 @@ use warnings;
 use DBI;
 
 sub clustering{
-	my ($pdbe_dbh,$node_mapping_db,$filepath,$cluster_db) = @_;
+	my ($pdbe_dbh,$node_mapping_db,$cluster_db) = @_;
 
 	#-------------Start: Segment_scop---------#
 	my $cluster_sth = $pdbe_dbh->prepare("select * from $node_mapping_db");
@@ -77,8 +77,6 @@ sub clustering{
 		}
 	}
 
-	
-	open(FILE,">$filepath") || die ("Error can't open $filepath");
 
 	print "clustering\n";
 
@@ -93,17 +91,13 @@ sub clustering{
 				# print $parent."\n";
 			}
 			$nodes.=$element." ";
-			print FILE $element." ";
 
 		}
 		$nodes =~ s/\s+$//;
 		insertCluster($pdbe_dbh,$parent,$nodes,$cluster_db);
 
 		$counter=0;
-		print FILE "\n";
 	}
-
-	close(FILE);
 }
 
 sub insertCluster{

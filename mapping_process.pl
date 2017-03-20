@@ -2,7 +2,7 @@
 
 #######################################################################################
 # @author T. Paysan-Lafosse
-# @brief This script generates all the tables from the sifts_xref_residue table to end up MDA blocks for the superfamilies from CATH and SCOP
+# @brief This script generates all the tables from the sifts_xref_residue table to end up clustering all the superfamilies from CATH and SCOP
 #######################################################################################
 
 use strict;
@@ -31,7 +31,7 @@ my $datestart = localtime();
 print "Mapping process started at $datestart\n";
 
 #delete and rename existing tables
-# print "drop tables\n";
+#print "drop tables\n";
 
 my @tables = ('SEGMENT_CATH','SEGMENT_SCOP','SEGMENT_CATH_SCOP','PDBE_ALL_DOMAIN_MAPPING','PDBE_ALL_NODE_MAPPING','BLOCK_CHAIN','BLOCK_UNIPROT','CLUSTER_BLOCK','MDA_BLOCK','CLUSTER');
 
@@ -49,15 +49,14 @@ my $mdaDirectory = $path."MDA_results/CATH_4_1/";
 my $blockFile = $mdaDirectory."mda_blocks.list";
 my $blockInfo = $mdaDirectory."mda_info.list";
 my $goldFile = $mdaDirectory."gold.list";
-my $clusterFile=$path."cluster";
 my $representative = $path.'representative/representative_list';
 
 #create tables
 create_tables::createTables($pdbe_dbh,%tables_new);
 
-#insert data in segment tables
-get_segment::getSegmentTables($pdbe_dbh,$tables_new{'SEGMENT_CATH'});
-get_segment::getSegmentTables($pdbe_dbh,$tables_new{'SEGMENT_SCOP'});
+#create segment tables
+get_segment::getSegmentCath($pdbe_dbh,$tables_new{'SEGMENT_CATH'});
+get_segment::getSegmentScop($pdbe_dbh,$tables_new{'SEGMENT_SCOP'});
 
 get_segment::createCombinedSegment($pdbe_dbh, $tables_new{'SEGMENT_SCOP'},$tables_new{'SEGMENT_CATH'}, $tables_new{'SEGMENT_CATH_SCOP'});
 
@@ -66,9 +65,6 @@ domain_mapping::mapping($pdbe_dbh, $tables_new{'SEGMENT_SCOP'},$tables_new{'SEGM
 
 #node mapping
 node_mapping::nodeMapping($pdbe_dbh,$tables_new{'SEGMENT_SCOP'},$tables_new{'SEGMENT_CATH'}, $tables_new{'PDBE_ALL_DOMAIN_MAPPING'},$tables_new{'PDBE_ALL_NODE_MAPPING'});
-
-#clustering
-clustering::clustering($pdbe_dbh,$tables_new{'PDBE_ALL_NODE_MAPPING'},$clusterFile,$tables_new{'CLUSTER'});
 
 #get medal equivalence
 get_medals::getMedals($pdbe_dbh,$tables_new{'PDBE_ALL_NODE_MAPPING'});

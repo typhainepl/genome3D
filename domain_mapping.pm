@@ -36,7 +36,7 @@ sub mapping{
 
 		my $CathOrd = $xref_row->{CATH_DOMAIN}."-".$xref_row->{CATH_ORDINAL};
 		my $ScopOrd = $xref_row->{SCOP_DOMAIN}."-".$xref_row->{SCOP_ORDINAL};
-		my $key = $CathOrd.$ScopOrd;
+		my $key = $CathOrd." ".$ScopOrd;
 
 		$data{$key}{CD} = $xref_row->{CATH_DOMAIN};
 		$data{$key}{SD} = $xref_row->{SCOP_DOMAIN};
