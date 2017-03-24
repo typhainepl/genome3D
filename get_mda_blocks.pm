@@ -333,7 +333,7 @@ sub getUniprot{
 	my $chain_num = substr($chain,-1);
 	my $uniprot = "None";
 
-	my $get_uniprot = $pdbe_dbh->prepare("select accession from sifts_admin_new.sifts_xref_residue where entry_id=? and AUTH_ASYM_ID=? and accession is not null");
+	my $get_uniprot = $pdbe_dbh->prepare("select accession from sifts_admin_new.sifts_xref_residue where entry_id=? and AUTH_ASYM_ID=? and accession is not null and canonical_acc=1");
 	$get_uniprot->execute($pdb,$chain_num);
 	
 	while (my $row = $get_uniprot->fetchrow_hashref) {

@@ -39,7 +39,7 @@ CREATE TABLE $segment_cath_db(
  )
 SQL
  
-	$pdbe_dbh->do($create_segment_cath) or die "Can't create $segment_cath_db table\n\n";
+#	$pdbe_dbh->do($create_segment_cath) or die "Can't create $segment_cath_db table\n\n";
 
 	my $create_segment_scop = <<"SQL";
 CREATE TABLE $segment_scop_db(
@@ -55,7 +55,7 @@ CREATE TABLE $segment_scop_db(
 )
 SQL
 
-	$pdbe_dbh->do($create_segment_scop) or die "Can't create $segment_scop_db table\n\n";
+#	$pdbe_dbh->do($create_segment_scop) or die "Can't create $segment_scop_db table\n\n";
 
 
 my $create_segment_cath_scop = <<"SQL";
@@ -78,7 +78,7 @@ CREATE TABLE $combined_segment_db(
 )
 SQL
 
-	$pdbe_dbh->do($create_segment_cath_scop) or die "Can't create $combined_segment_db table\n\n";
+#	$pdbe_dbh->do($create_segment_cath_scop) or die "Can't create $combined_segment_db table\n\n";
 
 	my $create_domain_mapping = <<"SQL";
 CREATE TABLE $domain_mapping_db( 
@@ -101,7 +101,7 @@ CREATE TABLE $domain_mapping_db(
 )
 SQL
 
-	$pdbe_dbh->do($create_domain_mapping) or die "Can't create $domain_mapping_db\n";
+#	$pdbe_dbh->do($create_domain_mapping) or die "Can't create $domain_mapping_db\n";
 
 	my $create_node_mapping = <<"SQL";
 CREATE TABLE $node_mapping_db(
@@ -137,7 +137,7 @@ CREATE TABLE $node_mapping_db(
  	)
 SQL
 
-	$pdbe_dbh->do($create_node_mapping) or die "Can't create $node_mapping_db table\n\n";
+#	$pdbe_dbh->do($create_node_mapping) or die "Can't create $node_mapping_db table\n\n";
 
  	my $create_cluster = <<"SQL";
 CREATE TABLE $cluster_db (
@@ -147,7 +147,7 @@ CREATE TABLE $cluster_db (
 )
 SQL
 
-	$pdbe_dbh->do($create_cluster) or die "Can't create $cluster_db table\n\n";
+#	$pdbe_dbh->do($create_cluster) or die "Can't create $cluster_db table\n\n";
 
 
 	my $create_cluster_block = <<"SQL";
