@@ -34,27 +34,49 @@ def getNbBlocks(pdbecursor,clusternode):
 	return nbBlock
 
 
-def haveSameNumberOfDomains(nodes):
+def haveSameNumberOfDomains(nodes,number):
 	#search is same number of CATH and SCOP domains in the block
-
+	number = int(number)
+	
 	nbCath = 0
 	nbScop = 0
+	nbDiffCath = 0 
+	nbDiffScop = 0
+	cath_sf = []
+	scop_sf = []
 
 	for domain in nodes:
 		if re.match("^[a-z]",domain):
 			nbScop+=1
+			if number >= 3:
+				#search if the block is composed of more than one SCOP sf
+				if domain not in scop_sf:
+					nbDiffScop+=1
+					scop_sf.append(domain)
 		else:
 			nbCath+=1
+			if number >= 3:
+				if domain not in cath_sf:
+					#search if the block is composed of more than one CATH sf
+					nbDiffCath+=1
+					cath_sf.append(domain)
 
 	#same number of CATH and SCOP domains
 	if nbCath == nbScop:
 		return "true"
-	elif nbCath > nbScop and nbScop == 1:
+	#in number 2 case we want cases where 2 domains from 1sf corresponds to 1 domain
+	elif number == 2 and nbCath > nbScop and nbScop == 1:
 		return "more cath"
-	elif nbCath < nbScop and nbCath == 1:
+	elif number == 2 and nbCath < nbScop and nbCath == 1:
+		return "more scop"
+	#in the number 3 case we only want cases where 2 domains from 2sf corresponds to 1 domain
+	elif number == 3 and nbDiffCath == 2 and nbScop == 1:
+		return "more cath"
+	elif number == 3 and nbDiffScop == 2 and nbCath == 1:
 		return "more scop"
 	else:
 		return "false"
+
 
 
 
@@ -128,16 +150,16 @@ def getUnintegratedBlocks(pdbecursor, ipprocursor, clusternode, number, unintegr
 
 			#if same number of CATH and SCOP domains
 			if int(number) == 1:
-				if haveSameNumberOfDomains(blockDomains) == "true":
+				if haveSameNumberOfDomains(blockDomains,number) == "true":
 					#if only one block in the cluster => GOLD
 					if nbBlock == 1 and clusternode not in seen:
 
 						toVerify = 1
 						unintegrated['gold_cluster']+=1
 
-			#if one domain in CATH/SCOP corresponds to mulitple domain in SCOP/CATH but in same superfamily
+			#if one domain in CATH/SCOP corresponds to mulitple domain in SCOP/CATH
 			else:
-				if haveSameNumberOfDomains(blockDomains) == "more cath" or haveSameNumberOfDomains(blockDomains) == "more scop":
+				if haveSameNumberOfDomains(blockDomains,number) == "more cath" or haveSameNumberOfDomains(blockDomains,number) == "more scop":
 					#if there isn't domains with undefined SF in the block
 					if whiteSpace(pdbecursor,block) == 0 and clusternode not in seen:
 						returnValues = search_unintegrated.getUnintegrated(pdbecursor,ipprocursor, nodes, unintegrated_file)
