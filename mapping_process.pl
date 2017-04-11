@@ -27,8 +27,7 @@ my $path="/nfs/msd/work2/typhaine/genome3D/";
 my %config = do $path."/config.pl";    
 my $pdbe_dbh = DBI->connect("DBI:Oracle:".$config{db}, $config{user}, $config{password});
 
-my $datestart = localtime();
-print "Mapping process started at $datestart\n";
+print "Mapping process started\n";
 
 #delete and rename existing tables
 #print "drop tables\n";
@@ -86,9 +85,8 @@ get_chop_homo::getChopping($pdbe_dbh,$mdaDirectory,$representative,%tables_new);
 #print equivalent gold pairs cluster blocks
 # get_gold_clusters::get_gold_clusters($pdbe_dbh,$blockFile,$goldFile, $tables_new{'PDBE_ALL_NODE_MAPPING'});
 
-my $dateend = localtime();
-print "Mapping process finished at $dateend\n";
-
+my $runtime = time - $^T."\n";
+printf("\n\nTotal running time: %02d:%02d:%02d\n\n", int($runtime / 3600), int(($runtime % 3600) / 60), int($runtime % 60),"\n");
 
 sub cleanDirectory{
 	my ($directory) = @_;
