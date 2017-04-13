@@ -27,13 +27,23 @@ HOST='pdbe_test'
 # schema='SIFTS_ADMIN'
 tables=['SCOPE_DESCRIPTION','SCOPE_COMMENT','SCOPE_HIERARCHY','SCOPE_CLASS']
 
-REPO='https://scop.berkeley.edu/downloads/parse/'
+# REPO='https://scop.berkeley.edu/downloads/parse/'
+# VERSION='2.06'
+# 
+# DESC_REPO=REPO+'dir.des.scope.'+VERSION+'-stable.txt'
+# CLASS_REPO=REPO+'dir.cla.scope.'+VERSION+'-stable.txt'
+# HIERARCHY_REPO=REPO+'dir.hie.scope.'+VERSION+'-stable.txt'
+# COMMENTS_REPO=REPO+'dir.com.scope.'+VERSION+'-stable.txt'
+
+# NEW UPDATE OF SCOPE (06/04/2017)
+REPO='https://scop.berkeley.edu/downloads/update/'
+UPDATE = '-2017-04-06'
 VERSION='2.06'
 
-DESC_REPO=REPO+'dir.des.scope.'+VERSION+'-stable.txt'
-CLASS_REPO=REPO+'dir.cla.scope.'+VERSION+'-stable.txt'
-HIERARCHY_REPO=REPO+'dir.hie.scope.'+VERSION+'-stable.txt'
-COMMENTS_REPO=REPO+'dir.com.scope.'+VERSION+'-stable.txt'
+DESC_REPO=REPO+'dir.des.scope.'+VERSION+UPDATE+'.txt'
+CLASS_REPO=REPO+'dir.cla.scope.'+VERSION+UPDATE+'.txt'
+HIERARCHY_REPO=REPO+'dir.hie.scope.'+VERSION+UPDATE+'.txt'
+COMMENTS_REPO=REPO+'dir.com.scope.'+VERSION+UPDATE+'.txt'
 
 TMP='scop_tmp'
 
@@ -52,22 +62,22 @@ comment='CREATE TABLE SCOPE_COMMENT_NEW ( \
 	  )'
 
 hierarchy='CREATE TABLE SCOPE_HIERARCHY_NEW ( \
-		  "SUNID"     NUMBER(38,0) NOT NULL ENABLE, \
-		  "PARENT_ID" NUMBER(38,0), \
+		  "SUNID"      NUMBER(38,0) NOT NULL ENABLE, \
+		  "PARENT_ID"  NUMBER(38,0), \
 		  "CHILDS_IDS" CLOB \
 		  )'
 		  
 classtable='CREATE TABLE SCOPE_CLASS_NEW ( \
-			  "SCOP_ID"      VARCHAR2(8 BYTE), \
-			  "ENTRY"        VARCHAR2(4 BYTE), \
-			  "ORDINAL"      NUMBER(38,0) NOT NULL ENABLE, \
-			  "AUTH_ASYM_ID" VARCHAR2(4 BYTE), \
-			  "BEG_SEQ"      NUMBER(38,0), \
-			  "BEG_INS_CODE" VARCHAR2(1 BYTE), \
-			  "END_SEQ"      NUMBER(38,0), \
-			  "END_INS_CODE" VARCHAR2(1 BYTE), \
-			  "SCCS"         VARCHAR2(20 BYTE), \
-			  "SUNID"        NUMBER(38,0) NOT NULL ENABLE, \
+			  "SCOP_ID"        VARCHAR2(8 BYTE), \
+			  "ENTRY"          VARCHAR2(4 BYTE), \
+			  "ORDINAL"        NUMBER(38,0) NOT NULL ENABLE, \
+			  "AUTH_ASYM_ID"   VARCHAR2(4 BYTE), \
+			  "BEG_SEQ"        NUMBER(38,0), \
+			  "BEG_INS_CODE"   VARCHAR2(1 BYTE), \
+			  "END_SEQ"        NUMBER(38,0), \
+			  "END_INS_CODE"   VARCHAR2(1 BYTE), \
+			  "SCCS"           VARCHAR2(20 BYTE), \
+			  "SUNID"          NUMBER(38,0) NOT NULL ENABLE, \
 			  "CLASS_ID"       NUMBER(38,0), \
 			  "FOLD_ID"        NUMBER(38,0), \
 			  "SUPERFAMILY_ID" NUMBER(38,0), \
