@@ -47,7 +47,7 @@ COMMENTS_REPO=REPO+'dir.com.scope.'+VERSION+UPDATE+'.txt'
 
 TMP='scop_tmp'
 
-t_description='CREATE TABLE SCOPE_DESCRIPTION_NEW ( \
+t_description='CREATE TABLE SCOPE_DESCRIPTION_TEST ( \
 	"SUNID"       NUMBER(38,0) NOT NULL ENABLE, \
 	"ENTRY_TYPE"  VARCHAR2(2 BYTE), \
 	"SCCS"        VARCHAR2(20 BYTE), \
@@ -55,19 +55,19 @@ t_description='CREATE TABLE SCOPE_DESCRIPTION_NEW ( \
 	"DESCRIPTION" VARCHAR2(240 BYTE) \
 	)'
 	
-comment='CREATE TABLE SCOPE_COMMENT_NEW ( \
+comment='CREATE TABLE SCOPE_COMMENT_TEST ( \
 		"SUNID"        NUMBER(38,0) NOT NULL ENABLE, \
 		"ORDINAL"      NUMBER(38,0) NOT NULL ENABLE, \
 		"COMMENT_TEXT" VARCHAR2(2000 BYTE) \
 	  )'
 
-hierarchy='CREATE TABLE SCOPE_HIERARCHY_NEW ( \
+hierarchy='CREATE TABLE SCOPE_HIERARCHY_TEST ( \
 		  "SUNID"      NUMBER(38,0) NOT NULL ENABLE, \
 		  "PARENT_ID"  NUMBER(38,0), \
 		  "CHILDS_IDS" CLOB \
 		  )'
 		  
-classtable='CREATE TABLE SCOPE_CLASS_NEW ( \
+classtable='CREATE TABLE SCOPE_CLASS_TEST ( \
 			  "SCOP_ID"        VARCHAR2(8 BYTE), \
 			  "ENTRY"          VARCHAR2(4 BYTE), \
 			  "ORDINAL"        NUMBER(38,0) NOT NULL ENABLE, \
@@ -117,7 +117,7 @@ cursor=connection.cursor()
 clean_tmp(TMP)
 
 for t in tables:
-	if not dosql(cursor,'DROP TABLE '+t+'_NEW'):
+	if not dosql(cursor,'DROP TABLE '+t+'_TEST'):
 		cursor.close()
 		connection.close()
 		sys.exit(-1)
