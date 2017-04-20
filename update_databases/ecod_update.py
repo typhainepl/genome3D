@@ -52,7 +52,7 @@ comment='CREATE TABLE ECOD_COMMENT_TEST ( \
           
 classtable='CREATE TABLE SEGMENT_ECOD_TEST ( \
               "UID"          NUMBER(38,0) NOT NULL ENABLE, \
-              "ENTRY"        VARCHAR2(4 BYTE) NOT NULL ENABLE, \
+              "ENTRY_ID"        VARCHAR2(4 BYTE) NOT NULL ENABLE, \
               "DOMAIN"    VARCHAR2(20 BYTE), \
               "ORDINAL"      NUMBER(38,0) NOT NULL ENABLE, \
               "AUTH_ASYM_ID" VARCHAR2(4 BYTE), \
@@ -232,11 +232,11 @@ fdesc.close()
 print "parsing ok"
 # print class_list
 
-print "insert data into %s_NEW table" % (tables[0])
+print "insert data into %s_TEST table" % (tables[0])
 cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8)' % (tables[0]+'_TEST'),desc_list)
-print "insert data into %s_NEW table" % (tables[1])
+print "insert data into %s_TEST table" % (tables[1])
 cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4)' % (tables[1]+'_TEST'),comments_list)
-print "insert data into %s_NEW table" % (tables[2])
+print "insert data into %s_TEST table" % (tables[2])
 cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8,:9,:10,:11,:12,:13,:14)' % (tables[2]+'_TEST'),class_list)
 
 connection.commit()
