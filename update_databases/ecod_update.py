@@ -241,5 +241,19 @@ cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8,:9,:10,:11,:12
 
 connection.commit()
 
+SQL="drop table " + tables[0] +";\
+    drop table " + tables[1] +";\
+    drop table " + tables[2] +";\
+    alter table " + tables[0] + "_NEW rename to " + tables[0] + ";\
+    alter table " + tables[1] + "_NEW rename to " + tables[1] + ";\
+    alter table " + tables[2] + "_NEW rename to " + tables[2] + ";\
+    commit;"
 
+for command in SQL.split(';')[:-1]:
+        if not dosql(cursor,command):
+            cursor.close()
+            connection.close()
+            sys.exit(-1)
+ 
+connection.commit()
 
