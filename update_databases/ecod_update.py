@@ -32,7 +32,7 @@ VERSION='1.4'
 
 TMP='ecod_tmp'
 
-t_description='CREATE TABLE ECOD_DESCRIPTION_NEW ( \
+t_description='CREATE TABLE ECOD_DESCRIPTION_TEST ( \
     "UID"         NUMBER(38,0) NOT NULL ENABLE, \
     "F_ID"        VARCHAR2(20 BYTE), \
     "DOMAIN_ID"   VARCHAR2(20 BYTE), \
@@ -43,14 +43,14 @@ t_description='CREATE TABLE ECOD_DESCRIPTION_NEW ( \
     "DESCRIPTION" VARCHAR2(2400 BYTE) \
     )'
     
-comment='CREATE TABLE ECOD_COMMENT_NEW ( \
+comment='CREATE TABLE ECOD_COMMENT_TEST ( \
         "UID"      NUMBER(38,0) NOT NULL ENABLE, \
         "ORDINAL"  NUMBER(38,0) NOT NULL ENABLE, \
         "LIGAND"   VARCHAR2(2000 BYTE), \
         "CURATION" VARCHAR2(20 BYTE) \
       )'
           
-classtable='CREATE TABLE SEGMENT_ECOD_NEW ( \
+classtable='CREATE TABLE SEGMENT_ECOD_TEST ( \
               "UID"          NUMBER(38,0) NOT NULL ENABLE, \
               "ENTRY"        VARCHAR2(4 BYTE) NOT NULL ENABLE, \
               "DOMAIN"    VARCHAR2(20 BYTE), \
@@ -134,7 +134,7 @@ clean_tmp(TMP)
 
 #drop old tables and create new ones
 for t in tables:
-    if not dosql(cursor,'DROP TABLE '+t+'_NEW'):
+    if not dosql(cursor,'DROP TABLE '+t+'_TEST'):
         cursor.close()
         connection.close()
         sys.exit(-1)
@@ -233,27 +233,27 @@ print "parsing ok"
 # print class_list
 
 print "insert data into %s_NEW table" % (tables[0])
-cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8)' % (tables[0]+'_NEW'),desc_list)
+cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8)' % (tables[0]+'_TEST'),desc_list)
 print "insert data into %s_NEW table" % (tables[1])
-cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4)' % (tables[1]+'_NEW'),comments_list)
+cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4)' % (tables[1]+'_TEST'),comments_list)
 print "insert data into %s_NEW table" % (tables[2])
-cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8,:9,:10,:11,:12,:13,:14)' % (tables[2]+'_NEW'),class_list)
+cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8,:9,:10,:11,:12,:13,:14)' % (tables[2]+'_TEST'),class_list)
 
 connection.commit()
 
-SQL="drop table " + tables[0] +";\
-    drop table " + tables[1] +";\
-    drop table " + tables[2] +";\
-    alter table " + tables[0] + "_NEW rename to " + tables[0] + ";\
-    alter table " + tables[1] + "_NEW rename to " + tables[1] + ";\
-    alter table " + tables[2] + "_NEW rename to " + tables[2] + ";\
-    commit;"
-
-for command in SQL.split(';')[:-1]:
-        if not dosql(cursor,command):
-            cursor.close()
-            connection.close()
-            sys.exit(-1)
+# SQL="drop table " + tables[0] +";\
+#     drop table " + tables[1] +";\
+#     drop table " + tables[2] +";\
+#     alter table " + tables[0] + "_TEST rename to " + tables[0] + ";\
+#     alter table " + tables[1] + "_TEST rename to " + tables[1] + ";\
+#     alter table " + tables[2] + "_TEST rename to " + tables[2] + ";\
+#     commit;"
+# 
+# for command in SQL.split(';')[:-1]:
+#         if not dosql(cursor,command):
+#             cursor.close()
+#             connection.close()
+#             sys.exit(-1)
  
 connection.commit()
 
