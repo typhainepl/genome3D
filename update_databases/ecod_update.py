@@ -13,16 +13,16 @@ dirname = os.path.dirname(__file__)
 if not dirname:
     dirname = '.'
     
-# sys.path.insert(0,'/nfs/msd/work2/sifts_newDB/update_xref_databases/common/')
-# 
-# from common import dosql
-# 
-# # config = ConfigParser.RawConfigParser()
-# # config.read(dirname + '/../db.cfg')
-# 
-# USER='typhaine'
-# PASS='typhaine55'
-# HOST='pdbe_test'
+sys.path.insert(0,'/nfs/msd/work2/sifts_newDB/update_xref_databases/common/')
+
+from common import dosql
+
+# config = ConfigParser.RawConfigParser()
+# config.read(dirname + '/../db.cfg')
+
+USER='typhaine'
+PASS='typhaine55'
+HOST='pdbe_test'
 
 # schema='SIFTS_ADMIN'
 tables=['ECOD_DESCRIPTION','ECOD_COMMENT','ECOD_CLASS']
@@ -34,8 +34,12 @@ TMP='ecod_tmp'
 
 t_description='CREATE TABLE ECOD_DESCRIPTION_NEW ( \
     "UID"         NUMBER(38,0) NOT NULL ENABLE, \
-    "F_ID"        VARCHAR2(8 BYTE), \
+    "F_ID"        VARCHAR2(20 BYTE), \
     "DOMAIN_ID"   VARCHAR2(20 BYTE), \
+    "A_NAME"      VARCHAR2(500 BYTE), \
+    "X_NAME"      VARCHAR2(500 BYTE), \
+    "H_NAME"      VARCHAR2(500 BYTE), \
+    "T_NAME"      VARCHAR2(500 BYTE), \
     "DESCRIPTION" VARCHAR2(2400 BYTE) \
     )'
     
@@ -47,21 +51,19 @@ comment='CREATE TABLE ECOD_COMMENT_NEW ( \
       )'
           
 classtable='CREATE TABLE ECOD_CLASS_NEW ( \
-              "UID"          VARCHAR2(8 BYTE) NOT NULL ENABLE, \
+              "UID"          NUMBER(38,0) NOT NULL ENABLE, \
               "ENTRY"        VARCHAR2(4 BYTE) NOT NULL ENABLE, \
+              "DOMAIN_ID"    VARCHAR2(20 BYTE), \
               "ORDINAL"      NUMBER(38,0) NOT NULL ENABLE, \
               "AUTH_ASYM_ID" VARCHAR2(4 BYTE), \
+              "SEQ_ID_START" NUMBER(38,0), \
+              "SEQ_ID_END"	 NUMBER(38,0), \
+              "F_ID"         VARCHAR2(20 BYTE), \
+              "F_NAME"       VARCHAR2(1000 BYTE), \
               "BEG_SEQ"      NUMBER(38,0), \
               "BEG_INS_CODE" VARCHAR2(1 BYTE), \
               "END_SEQ"      NUMBER(38,0), \
-              "END_INS_CODE" VARCHAR2(1 BYTE), \
-              "DOMAIN_ID"    VARCHAR2(20 BYTE), \
-              "F_ID"         VARCHAR2(20 BYTE), \
-              "A_NAME"       VARCHAR2(240 BYTE), \
-              "X_NAME"       VARCHAR2(240 BYTE), \
-              "H_NAME"       VARCHAR2(240 BYTE), \
-              "T_NAME"       VARCHAR2(240 BYTE), \
-              "F_NAME"       VARCHAR2(240 BYTE) \
+              "END_INS_CODE" VARCHAR2(1 BYTE) \
               )'
 
 def clean_tmp(path):
@@ -86,7 +88,7 @@ def download_file(url,path):
         
     return filename
 
-def find_seq(comment_list,class_list,submpdb,ordinal,uid,domain_id,pdb,f_id,a_name,x_name,h_name,t_name,f_name,rep):
+def find_seq(comment_list,class_list,submpdb,subseqid,ordinal,uid,domain_id,pdb,f_id,f_name,rep):
     
     chain = submpdb.group(1)
     
@@ -94,6 +96,13 @@ def find_seq(comment_list,class_list,submpdb,ordinal,uid,domain_id,pdb,f_id,a_na
     end = submpdb.group(3)
     beg_ins_code = None
     end_ins_code = None
+
+    if subseqid != None:
+        seqid_begin = subseqid.group(2)
+        seqid_end = subseqid.group(3)
+    else:
+        seqid_begin = None
+        seqid_end = None
     
     if begin[-1].isalpha():
         beg_ins_code=begin[-1]
@@ -103,11 +112,11 @@ def find_seq(comment_list,class_list,submpdb,ordinal,uid,domain_id,pdb,f_id,a_na
         end_ins_code=end[-1]
         end=end[:-1]
     
-    class_obj = (uid,pdb,ordinal,chain,begin,beg_ins_code,end,end_ins_code,domain_id,f_id,a_name,x_name,h_name,t_name,f_name)
+    class_obj = (uid,pdb,domain_id,ordinal,chain,seqid_begin,seqid_end,f_id,f_name,begin,beg_ins_code,end,end_ins_code)
     class_list.append(class_obj)
     comment_obj = (uid,ordinal,ligand,rep)
     comment_list.append(comment_obj)
-    
+
     return chain
     
 
@@ -159,7 +168,7 @@ for row in fdesc.readlines():
     #remove double quotes
     row = row.replace('"','')
     #get the data
-    uid,domain_id,rep,f_id,pdb,chain,pdb_range,seq_id_range,a_name,x_name,h_name,t_name,f_name,description,ligand = row.split('\t',14)
+    uid,domain_id,rep,f_id,pdb,chain,pdb_range,seqid_range,a_name,x_name,h_name,t_name,f_name,description,ligand = row.split('\t',14)
     
     # replace values by none if no information given by ECOD
     if ligand == 'NO_LIGANDS_4A': ligand = None
@@ -174,39 +183,58 @@ for row in fdesc.readlines():
   
     # fill comment list and class list
     # patterns to get the chain and begin and end positions
-    pattern = '([A-Z]:-?\d{1,}[A-Z]?--?\d{1,}[A-Z]?)(,([A-Z]:-?\d{1,}--?\d{1,}))*'
+    pattern = '([A-Z]:-?\d{1,}[A-Z]?--?\d{1,}[A-Z]?),?([A-Z]:-?\d{1,}--?\d{1,})?,?([A-Z]:-?\d{1,}--?\d{1,})?'
     subpattern = '([A-Z]):(-?\d{1,}[A-Z]?)-(-?\d{1,}[A-Z]?)'
     
     mpdb = re.search(pattern,pdb_range)
+    seq_id = re.search(pattern,seqid_range)
     if mpdb:
         # if the pattern is found, get chains, begin, end positions and insertions
         submpdb = re.search(subpattern,mpdb.group(1))
-        chain = find_seq(comments_list,class_list,submpdb,ordinal,uid,domain_id,pdb,f_id,a_name,x_name,h_name,t_name,f_name,rep)
+        subseqid = re.search(subpattern,seq_id.group(1))
+        chain = find_seq(comments_list,class_list,submpdb,subseqid,ordinal,uid,domain_id,pdb,f_id,f_name,rep)
         
-        if mpdb.group(3):
+        if mpdb.group(2):
             #if more than one chain
-            submpdb = re.search(subpattern,mpdb.group(3))
-            
+            submpdb = re.search(subpattern,mpdb.group(2))
+            if seq_id.group(2):
+                subseqid = re.search(subpattern,seq_id.group(2))
+            else: 
+                subseqid = None
             # if the previous chain has the same letter than the current one, increase the ordinal number
             if chain == submpdb.group(1):
                 ordinal += 1
             # get chains, begin, end positions and insertions
-            find_seq(comments_list,class_list,submpdb,ordinal,uid,domain_id,pdb,f_id,a_name,x_name,h_name,t_name,f_name,rep)
+            chain = find_seq(comments_list,class_list,submpdb,subseqid,ordinal,uid,domain_id,pdb,f_id,f_name,rep)
+
+        if mpdb.group(3):
+            #if more than one chain
+            submpdb = re.search(subpattern,mpdb.group(3))
+            if seq_id.group(3):
+                subseqid = re.search(subpattern,seq_id.group(3))
+            else: 
+                subseqid = None
+            # if the previous chain has the same letter than the current one, increase the ordinal number
+            if chain == submpdb.group(1) or chain == submpdb.group(2):
+                ordinal += 1
+            # get chains, begin, end positions and insertions
+            find_seq(comments_list,class_list,submpdb,subseqid,ordinal,uid,domain_id,pdb,f_id,f_name,rep)
 
     #description list
-    desc_obj = (uid,f_id,domain_id,description)
+    desc_obj = (uid,f_id,domain_id,a_name,x_name,h_name,t_name,description)
     desc_list.append(desc_obj)
         
 
 fdesc.close()
 print "parsing ok"
+# print class_list
 
 print "insert data into %s_NEW table" % (tables[0])
-cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4)' % (tables[0]+'_NEW'),desc_list)
+cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8)' % (tables[0]+'_NEW'),desc_list)
 print "insert data into %s_NEW table" % (tables[1])
 cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4)' % (tables[1]+'_NEW'),comments_list)
 print "insert data into %s_NEW table" % (tables[2])
-cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8,:9,:10,:11,:12,:13,:14,:15)' % (tables[3]+'_NEW'),class_list)
+cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8,:9,:10,:11,:12,:13)' % (tables[2]+'_NEW'),class_list)
 
 connection.commit()
 

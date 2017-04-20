@@ -139,7 +139,7 @@ connection.commit()
 
 
 #description
-print "insert data into %s_NEW table" % (tables[0])
+print "insert data into %s_TEST table" % (tables[0])
 
 desc=download_file(DESC_REPO,TMP)
 
@@ -163,13 +163,13 @@ for row in fdesc.readlines():
 
 fdesc.close()
 
-cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5)' % (tables[0]+'_NEW'),desc_list)
+cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5)' % (tables[0]+'_TEST'),desc_list)
 connection.commit()
 
 
 
 #comments
-print "insert data into %s_NEW table" % (tables[1])
+print "insert data into %s_TEST table" % (tables[1])
 
 comments=download_file(COMMENTS_REPO,TMP)
 fcomments=open(comments)
@@ -192,13 +192,13 @@ for row in fcomments.readlines():
 
 fcomments.close()
 
-cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3)' % (tables[1]+'_NEW'),comments_list)
+cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3)' % (tables[1]+'_TEST'),comments_list)
 connection.commit()
 
 
 
 # #hierarchy
-print "insert data into %s_NEW table" % (tables[2])	
+print "insert data into %s_TEST table" % (tables[2])	
 
 hierarchy=download_file(HIERARCHY_REPO,TMP)
 fhierarchy=open(hierarchy)
@@ -233,7 +233,7 @@ i = 0
 # The database can't deal with the CLOBs (hangs!!!) so I have insert 100 at a time... 
 while i < len(hierarchy_list):
 	cursor.setinputsizes(*inputsizes)
-	cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3)' % (tables[2]+'_NEW'),hierarchy_list[i:i+100])
+	cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3)' % (tables[2]+'_TEST'),hierarchy_list[i:i+100])
 	i+=100
 
 connection.commit()
@@ -241,7 +241,7 @@ connection.commit()
 
 
 #classification
-print "insert data into %s_NEW table" % (tables[3])
+print "insert data into %s_TEST table" % (tables[3])
 
 classification=download_file(CLASS_REPO,TMP)
 fclass=open(classification)
@@ -322,17 +322,17 @@ for row in fclass.readlines():
 fclass.close()
 
 
-cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8,:9,:10,:11,:12,:13,:14,:15,:16,:17)' % (tables[3]+'_NEW'),class_list)
+cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8,:9,:10,:11,:12,:13,:14,:15,:16,:17)' % (tables[3]+'_TEST'),class_list)
 connection.commit()
 
 SQL="drop table " + tables[0] +";\
 	drop table " + tables[1] +";\
 	drop table " + tables[2] +";\
 	drop table " + tables[3] +";\
-	alter table " + tables[0] + "_NEW rename to " + tables[0] + ";\
-	alter table " + tables[1] + "_NEW rename to " + tables[1] + ";\
-	alter table " + tables[2] + "_NEW rename to " + tables[2] + ";\
-	alter table " + tables[3] + "_NEW rename to " + tables[3] + ";\
+	alter table " + tables[0] + "_TEST rename to " + tables[0] + ";\
+	alter table " + tables[1] + "_TEST rename to " + tables[1] + ";\
+	alter table " + tables[2] + "_TEST rename to " + tables[2] + ";\
+	alter table " + tables[3] + "_TEST rename to " + tables[3] + ";\
 	commit;"
 
 # 	CREATE INDEX scop_class_entry_auth ON SCOPE_CLASS(entry,auth_asym_id) tablespace SIFTS_ADMIN_I;\
@@ -342,13 +342,13 @@ SQL="drop table " + tables[0] +";\
 # 	commit;"
 
 
-for command in SQL.split(';')[:-1]:
-	if not dosql(cursor,command):
-		cursor.close()
-		connection.close()
-		sys.exit(-1)
+# for command in SQL.split(';')[:-1]:
+# 	if not dosql(cursor,command):
+# 		cursor.close()
+# 		connection.close()
+# 		sys.exit(-1)
 
-connection.commit()
+# connection.commit()
 
 
 print "Description: %d" % len(desc_list)    
