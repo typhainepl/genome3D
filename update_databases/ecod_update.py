@@ -25,7 +25,7 @@ PASS='typhaine55'
 HOST='pdbe_test'
 
 # schema='SIFTS_ADMIN'
-tables=['ECOD_DESCRIPTION','ECOD_COMMENT','ECOD_CLASS']
+tables=['ECOD_DESCRIPTION','ECOD_COMMENT','SEGMENT_ECOD']
 
 REPO='http://prodata.swmed.edu/ecod/distributions/ecod.latest.domains.txt'
 VERSION='1.4'
@@ -50,15 +50,16 @@ comment='CREATE TABLE ECOD_COMMENT_NEW ( \
         "CURATION" VARCHAR2(20 BYTE) \
       )'
           
-classtable='CREATE TABLE ECOD_CLASS_NEW ( \
+classtable='CREATE TABLE SEGMENT_ECOD_NEW ( \
               "UID"          NUMBER(38,0) NOT NULL ENABLE, \
               "ENTRY"        VARCHAR2(4 BYTE) NOT NULL ENABLE, \
-              "DOMAIN_ID"    VARCHAR2(20 BYTE), \
+              "DOMAIN"    VARCHAR2(20 BYTE), \
               "ORDINAL"      NUMBER(38,0) NOT NULL ENABLE, \
               "AUTH_ASYM_ID" VARCHAR2(4 BYTE), \
-              "SEQ_ID_START" NUMBER(38,0), \
-              "SEQ_ID_END"	 NUMBER(38,0), \
-              "F_ID"         VARCHAR2(20 BYTE), \
+              "START" NUMBER(38,0), \
+              "END"	 NUMBER(38,0), \
+              "LENGTH"       NUMBER(38,0), \
+              "SSF"         VARCHAR2(20 BYTE), \
               "F_NAME"       VARCHAR2(1000 BYTE), \
               "BEG_SEQ"      NUMBER(38,0), \
               "BEG_INS_CODE" VARCHAR2(1 BYTE), \
@@ -100,9 +101,11 @@ def find_seq(comment_list,class_list,submpdb,subseqid,ordinal,uid,domain_id,pdb,
     if subseqid != None:
         seqid_begin = subseqid.group(2)
         seqid_end = subseqid.group(3)
+        length = seqid_end-seqid_begin+1
     else:
         seqid_begin = None
         seqid_end = None
+        length = None
     
     if begin[-1].isalpha():
         beg_ins_code=begin[-1]
@@ -112,7 +115,7 @@ def find_seq(comment_list,class_list,submpdb,subseqid,ordinal,uid,domain_id,pdb,
         end_ins_code=end[-1]
         end=end[:-1]
     
-    class_obj = (uid,pdb,domain_id,ordinal,chain,seqid_begin,seqid_end,f_id,f_name,begin,beg_ins_code,end,end_ins_code)
+    class_obj = (uid,pdb,domain_id,ordinal,chain,seqid_begin,seqid_end,length,f_id,f_name,begin,beg_ins_code,end,end_ins_code)
     class_list.append(class_obj)
     comment_obj = (uid,ordinal,ligand,rep)
     comment_list.append(comment_obj)
@@ -234,7 +237,7 @@ cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8)' % (tables[0]
 print "insert data into %s_NEW table" % (tables[1])
 cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4)' % (tables[1]+'_NEW'),comments_list)
 print "insert data into %s_NEW table" % (tables[2])
-cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8,:9,:10,:11,:12,:13)' % (tables[2]+'_NEW'),class_list)
+cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8,:9,:10,:11,:12,:13,:14)' % (tables[2]+'_NEW'),class_list)
 
 connection.commit()
 
