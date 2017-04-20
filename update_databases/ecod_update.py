@@ -101,7 +101,7 @@ def find_seq(comment_list,class_list,submpdb,subseqid,ordinal,uid,domain_id,pdb,
     if subseqid != None:
         seqid_begin = subseqid.group(2)
         seqid_end = subseqid.group(3)
-        length = seqid_end-seqid_begin+1
+        length = int(seqid_end)-int(seqid_begin)+1
     else:
         seqid_begin = None
         seqid_end = None
