@@ -3,26 +3,30 @@
 import urllib2
 import os
 import cx_Oracle
-
 import re
 import ConfigParser
-
 import sys
 
 dirname = os.path.dirname(__file__)
 if not dirname:
     dirname = '.'
     
-sys.path.insert(0,'/nfs/msd/work2/sifts_newDB/update_xref_databases/common/')
+sys.path.insert(0,'/Users/typhaine/Desktop/genome3D/config/')
+sys.path.insert(0,'/nfs/msd/work2/typhaine/genome3D/config/')
 
-from common import dosql
+from config import dosql
 
-# config = ConfigParser.RawConfigParser()
-# config.read(dirname + '/../db.cfg')
+configdata = ConfigParser.RawConfigParser()
+configdata.read([os.path.expanduser('~/Desktop/genome3D/config/db.cfg'), os.path.expanduser('~/genome3D/config/db.cfg')])
 
-USER='typhaine'
-PASS='typhaine55'
-HOST='pdbe_test'
+#Connexion to PDBE_TEST database
+PDBEUSER=configdata.get('Global', 'pdbeUser')
+PDBEPASS=configdata.get('Global', 'pdbePass')
+PDBEHOST=configdata.get('Global', 'pdbeHost')
+
+pdbeconnection = cx_Oracle.connect(PDBEUSER+'/'+PDBEPASS+'@'+PDBEHOST)
+pdbecursor = pdbeconnection.cursor()
+
 
 # schema='SIFTS_ADMIN'
 tables=['ECOD_DESCRIPTION','ECOD_COMMENT','SEGMENT_ECOD']
@@ -59,7 +63,7 @@ classtable='CREATE TABLE SEGMENT_ECOD_TEST ( \
               "START" NUMBER(38,0), \
               "END"	 NUMBER(38,0), \
               "LENGTH"       NUMBER(38,0), \
-              "SSF"         VARCHAR2(20 BYTE), \
+              "SCCS"         VARCHAR2(20 BYTE), \
               "F_NAME"       VARCHAR2(1000 BYTE), \
               "BEG_SEQ"      NUMBER(38,0), \
               "BEG_INS_CODE" VARCHAR2(1 BYTE), \
@@ -124,30 +128,26 @@ def find_seq(comment_list,class_list,submpdb,subseqid,ordinal,uid,domain_id,pdb,
     
 
 ### MAIN program ###
-
-#database connexion
-connection = cx_Oracle.connect(USER+'/'+PASS+'@'+HOST)
-cursor=connection.cursor()
              
 #clean repertory
 clean_tmp(TMP)
 
 #drop old tables and create new ones
 for t in tables:
-    if not dosql(cursor,'DROP TABLE '+t+'_TEST'):
-        cursor.close()
-        connection.close()
+    if not dosql(pdbecursor,'DROP TABLE '+t+'_TEST'):
+        pdbecursor.close()
+        pdbeconnection.close()
         sys.exit(-1)
 
-connection.commit()
+pdbeconnection.commit()
 
 for t in [t_description,comment,classtable]:
-    if not dosql(cursor,t):
-        cursor.close()
-        connection.close()
+    if not dosql(pdbecursor,t):
+        pdbecursor.close()
+        pdbeconnection.close()
         sys.exit(-1)
     
-connection.commit()   
+pdbeconnection.commit()   
   
 #get the data
 desc=download_file(REPO,TMP)
@@ -233,13 +233,13 @@ print "parsing ok"
 # print class_list
 
 print "insert data into %s_TEST table" % (tables[0])
-cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8)' % (tables[0]+'_TEST'),desc_list)
+pdbecursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8)' % (tables[0]+'_TEST'),desc_list)
 print "insert data into %s_TEST table" % (tables[1])
-cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4)' % (tables[1]+'_TEST'),comments_list)
+pdbecursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4)' % (tables[1]+'_TEST'),comments_list)
 print "insert data into %s_TEST table" % (tables[2])
-cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8,:9,:10,:11,:12,:13,:14)' % (tables[2]+'_TEST'),class_list)
+pdbecursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8,:9,:10,:11,:12,:13,:14)' % (tables[2]+'_TEST'),class_list)
 
-connection.commit()
+pdbeconnection.commit()
 
 # SQL="drop table " + tables[0] +";\
 #     drop table " + tables[1] +";\
@@ -250,10 +250,12 @@ connection.commit()
 #     commit;"
 # 
 # for command in SQL.split(';')[:-1]:
-#         if not dosql(cursor,command):
-#             cursor.close()
-#             connection.close()
+#         if not dosql(pdbecursor,command):
+#             pdbecursor.close()
+#             pdbeconnection.close()
 #             sys.exit(-1)
  
-connection.commit()
+pdbeconnection.commit()
 
+pdbecursor.close()
+pdbeconnection.close()

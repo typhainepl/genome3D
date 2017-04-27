@@ -19,7 +19,7 @@ if not dirname:
     dirname = '.'
 
 config = ConfigParser.RawConfigParser()
-config.read(dirname+'/db.cfg')
+configdata.read([os.path.expanduser('~/Desktop/genome3D/config/db.cfg'), os.path.expanduser('~/genome3D/config/db.cfg')])
 
 #Connexion to interpro database
 IPPROUSER=config.get('Global', 'ipproUser')

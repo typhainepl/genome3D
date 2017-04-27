@@ -42,11 +42,13 @@ for row in my_file:
     pattern_new = re.search("\d\d/\d\d/\d\d\d\d",row)
     #pattern matching lines containing "none" string
     pattern_none = re.search("none",row)
+    #pattern matching lines containing an entry not validated
+    pattern_validate = re.search("not validated",row)
     
     #if the current line corresponds to a CATH entry
     if pattern_cath:
         #if entry newly integrated
-        if pattern_new:
+        if pattern_new and not pattern_validate:
             cath+=1
             previous_cath='cath_new'
         #if entry already integrated
