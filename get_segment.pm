@@ -25,7 +25,7 @@ sub getSegmentScop{
 	
 	my $get_info_scop = <<"SQL";
 	insert into $database (entry_id,auth_asym_id,"START","END",length,sccs,ssf,ordinal,domain)
-select e.entry_id, e.auth_asym_id, e."START", e."END", e."END"-e."START"+1 as LENGTH, s.sccs, s.superfamily_id, e.ordinal, e.sunid as DOMAIN
+select e.entry_id, e.auth_asym_id, e."START", e."END", e."END"-e."START"+1 as LENGTH, s.sccs, s.superfamily_id, e.ordinal, e.scop_id as DOMAIN
 from 
   sifts_admin_new.entity_scop e,
   sifts_admin_new.scop_class s
