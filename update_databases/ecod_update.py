@@ -17,7 +17,7 @@ sys.path.insert(0,'/nfs/msd/work2/typhaine/genome3D/config/')
 from config import dosql
 
 configdata = ConfigParser.RawConfigParser()
-configdata.read([os.path.expanduser('~/Desktop/genome3D/config/db.cfg'), os.path.expanduser('~/genome3D/config/db.cfg')])
+configdata.read([os.path.expanduser('~/Desktop/genome3D/config/db.cfg'), '/nfs/msd/work2/typhaine/genome3D/config/db.cfg'])
 
 #Connexion to PDBE_TEST database
 PDBEUSER=configdata.get('Global', 'pdbeUser')
