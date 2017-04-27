@@ -68,7 +68,8 @@ sub nodeMapping{
 
 		my $ScopDomain = $mapped_together_row->{SCOP_DOMAIN};
 		my $ScopFamily = $mapped_together_row->{SCCS};
-		if ($ScopFamily =~ /(.\.\d+\.\d+)\./) {$ScopSuperfamily = $1;}
+		if ($ScopFamily =~ /([a-z]\.\d+\.\d+)\./) {$ScopSuperfamily = $1;}
+		elsif ($ScopFamily =~ /(\d+\.\d+)\./) {$ScopSuperfamily = $1;}
 
 		# scop superfamilies starting with h, i, j or k are not real superfamilies => ignore them
 		if ($ScopSuperfamily =~ /^h|i|j|k/) {next;}
@@ -363,7 +364,7 @@ sub cathScopAll{
 	my $counter_DomainOrd = 0;
 	my $counter_Domain = 0;
 
-	my $all_sth = $pdbe_dbh->prepare("select * from $segment_db");
+	my $all_sth = $pdbe_dbh->prepare("select * from $segment_db where \"START\" is not null and \"END\" is not null");
 	$all_sth->execute();
 
 	while (my $all_row = $all_sth->fetchrow_hashref){
@@ -376,7 +377,8 @@ sub cathScopAll{
 		else{
 			$domain = $all_row->{DOMAIN};
 			my $family = $all_row->{SCCS};
-			if ($family =~ /(.\.\d+\.\d+)\./) {$superfamily = $1;}
+			if ($family =~ /([a-z]\.\d+\.\d+)\./) {$superfamily = $1;}
+			elsif ($family =~ /(\d+\.\d+)\./) {$superfamily = $1;}
 		}
 
 		my $ordinal = $all_row->{ORDINAL};
@@ -446,7 +448,8 @@ sub mapped_any {
 
 		my $ScopDomain = $mapped_row->{SCOP_DOMAIN};
 		my $ScopFamily = $mapped_row->{SCCS};
-		if ($ScopFamily =~ /(.\.\d+\.\d+)\./) {$ScopSuperfamily = $1;}
+		if ($ScopFamily =~ /([a-z]\.\d+\.\d+)\./) {$ScopSuperfamily = $1;}
+		elsif ($ScopFamily =~ /(\d+\.\d+)\./) {$ScopSuperfamily = $1;}
 		my $ScopOrdinal = $mapped_row->{SCOP_ORDINAL};
 		my $ScopLength = $mapped_row->{SCOP_LENGTH};
 
