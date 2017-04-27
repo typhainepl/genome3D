@@ -7,24 +7,24 @@
 # take 2 arguments in parameters: old_file and new_file to compare
 #######################################################################################
 
-import urllib2
 import os
-
-import ConfigParser
 import sys
 import re
-import search_unintegrated
 
+#get the arguments
 previous_file = sys.argv[1]
 new_file = sys.argv[2]
+
 dirname = os.path.dirname(__file__)
 if not dirname:
     dirname = '.'
 
+#files are in the unintegrated directory
 directoryToPrint = dirname +"/unintegrated/"
 unintegrated_gold_blocks_file = directoryToPrint+new_file
 unintegrated_previous = directoryToPrint+previous_file
 
+#open the files to read in
 previous = open (unintegrated_previous,'r')
 goldFile = open (unintegrated_gold_blocks_file,'r')
 

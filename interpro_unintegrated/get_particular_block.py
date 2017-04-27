@@ -14,6 +14,36 @@ import sys
 import re
 import search_unintegrated
 
+number = sys.argv[1]
+file_name = sys.argv[2]
+
+dirname = os.path.dirname(__file__)
+if not dirname:
+    dirname = '.'
+
+file_name = dirname + '/unintegrated/'+file_name
+
+#databases connection
+
+configdata = ConfigParser.RawConfigParser()
+configdata.read([os.path.expanduser('~/Desktop/genome3D/config/db.cfg'), '/nfs/msd/work2/typhaine/genome3D/config/db.cfg'])
+
+#Connexion to PDBE_TEST database
+PDBEUSER=configdata.get('Global', 'pdbeUser')
+PDBEPASS=configdata.get('Global', 'pdbePass')
+PDBEHOST=configdata.get('Global', 'pdbeHost')
+
+pdbeconnection = cx_Oracle.connect(PDBEUSER+'/'+PDBEPASS+'@'+PDBEHOST)
+pdbecursor = pdbeconnection.cursor()
+pdbecursor2 = pdbeconnection.cursor()
+
+#Connexion to interpro database
+IPPROUSER=configdata.get('Global', 'ipproUser')
+IPPROPASS=configdata.get('Global', 'ipproPass')
+IPPROHOST=configdata.get('Global', 'ipproHost')
+
+ipproconnection = cx_Oracle.connect(IPPROUSER+'/'+IPPROPASS+'@'+IPPROHOST)
+ipprocursor = ipproconnection.cursor()
 
 def clean_tmp(path):
     os.system('rm -Rf '+path)
@@ -233,35 +263,6 @@ def getCluster(pdbecursor,ipprocursor,number,file):
 
 ####################
 #main program
-
-
-number = sys.argv[1]
-file_name = sys.argv[2]
-
-dirname = os.path.dirname(__file__)
-if not dirname:
-    dirname = '.'
-
-config = ConfigParser.RawConfigParser()
-config.read(dirname + '/db.cfg')
-
-file_name = dirname + '/unintegrated/'+file_name
-
-#Connexion to PDBE_TEST database
-PDBEUSER=config.get('Global', 'pdbeUser')
-PDBEPASS=config.get('Global', 'pdbePass')
-PDBEHOST=config.get('Global', 'pdbeHost')
-
-pdbeconnection = cx_Oracle.connect(PDBEUSER+'/'+PDBEPASS+'@'+PDBEHOST)
-pdbecursor = pdbeconnection.cursor()
-
-#Connexion to interpro database
-IPPROUSER=config.get('Global', 'ipproUser')
-IPPROPASS=config.get('Global', 'ipproPass')
-IPPROHOST=config.get('Global', 'ipproHost')
-
-ipproconnection = cx_Oracle.connect(IPPROUSER+'/'+IPPROPASS+'@'+IPPROHOST)
-ipprocursor = ipproconnection.cursor()
 
 #clean directory
 # TMP = "unintegrated"
