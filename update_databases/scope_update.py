@@ -3,26 +3,27 @@
 import urllib2
 import os
 import cx_Oracle
-
 import re
 import ConfigParser
-
 import sys
 
-dirname = os.path.dirname(__file__)
-if not dirname:
-	dirname = '.'
 	
-sys.path.insert(0,'/nfs/msd/work2/sifts_newDB/update_xref_databases/common/')
+sys.path.insert(0,'/Users/typhaine/Desktop/genome3D/config/')
+sys.path.insert(0,'/nfs/msd/work2/typhaine/genome3D/config/')
 
-from common import dosql
+from config import dosql
 
-# config = ConfigParser.RawConfigParser()
-# config.read(dirname + '/../db.cfg')
+configdata = ConfigParser.RawConfigParser()
+configdata.read([os.path.expanduser('~/Desktop/genome3D/config/db.cfg'), os.path.expanduser('~/genome3D/config/db.cfg')])
 
-USER='typhaine'
-PASS='typhaine55'
-HOST='pdbe_test'
+#Connexion to PDBE_TEST database
+PDBEUSER=configdata.get('Global', 'pdbeUser')
+PDBEPASS=configdata.get('Global', 'pdbePass')
+PDBEHOST=configdata.get('Global', 'pdbeHost')
+
+pdbeconnection = cx_Oracle.connect(PDBEUSER+'/'+PDBEPASS+'@'+PDBEHOST)
+pdbecursor = pdbeconnection.cursor()
+
 
 # schema='SIFTS_ADMIN'
 tables=['SCOPE_DESCRIPTION','SCOPE_COMMENT','SCOPE_HIERARCHY','SCOPE_CLASS']
@@ -109,32 +110,28 @@ def download_file(url,path):
 		print e
 		
 	return filename
-
-
-connection = cx_Oracle.connect(USER+'/'+PASS+'@'+HOST)
-cursor=connection.cursor()
 			
 clean_tmp(TMP)
 
 for t in tables:
-	if not dosql(cursor,'DROP TABLE '+t+'_TEST'):
-		cursor.close()
-		connection.close()
+	if not dosql(pdbecursor,'DROP TABLE '+t+'_TEST'):
+		pdbecursor.close()
+		pdbeconnection.close()
 		sys.exit(-1)
-	# if not dosql(cursor,'ALTER TABLE '+t+'_NEW rename to '+t+'_OLD'):
-	# 	cursor.close()
-	# 	connection.close()
+	# if not dosql(pdbecursor,'ALTER TABLE '+t+'_NEW rename to '+t+'_OLD'):
+	# 	pdbecursor.close()
+	# 	pdbeconnection.close()
 	# 	sys.exit(-1)
 
-connection.commit()
+pdbeconnection.commit()
 
 for t in [t_description,comment,hierarchy,classtable]:
-	if not dosql(cursor,t):
-		cursor.close()
-		connection.close()
+	if not dosql(pdbecursor,t):
+		pdbecursor.close()
+		pdbeconnection.close()
 		sys.exit(-1)
 	
-connection.commit()   
+pdbeconnection.commit()   
 
 
 
@@ -159,12 +156,12 @@ for row in fdesc.readlines():
 	
 	desc_list.append(obj)
 
-	# cursor.execute('INSERT INTO %s VALUES (:1,:2,:3,:4,:5)' % (tables[0]+'_NEW'),obj)
+	# pdbecursor.execute('INSERT INTO %s VALUES (:1,:2,:3,:4,:5)' % (tables[0]+'_NEW'),obj)
 
 fdesc.close()
 
-cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5)' % (tables[0]+'_TEST'),desc_list)
-connection.commit()
+pdbecursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5)' % (tables[0]+'_TEST'),desc_list)
+pdbeconnection.commit()
 
 
 
@@ -192,8 +189,8 @@ for row in fcomments.readlines():
 
 fcomments.close()
 
-cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3)' % (tables[1]+'_TEST'),comments_list)
-connection.commit()
+pdbecursor.executemany('INSERT INTO %s VALUES(:1,:2,:3)' % (tables[1]+'_TEST'),comments_list)
+pdbeconnection.commit()
 
 
 
@@ -220,7 +217,7 @@ for row in fhierarchy.readlines():
 
 	hierarchy_list.append(obj)
 	
-	# cursor.execute('INSERT INTO %s VALUES(:1,:2,:3)' % (tables[2]+'_NEW'),obj)
+	# pdbecursor.execute('INSERT INTO %s VALUES(:1,:2,:3)' % (tables[2]+'_NEW'),obj)
 
 fhierarchy.close()
 
@@ -232,11 +229,11 @@ i = 0
 
 # The database can't deal with the CLOBs (hangs!!!) so I have insert 100 at a time... 
 while i < len(hierarchy_list):
-	cursor.setinputsizes(*inputsizes)
-	cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3)' % (tables[2]+'_TEST'),hierarchy_list[i:i+100])
+	pdbecursor.setinputsizes(*inputsizes)
+	pdbecursor.executemany('INSERT INTO %s VALUES(:1,:2,:3)' % (tables[2]+'_TEST'),hierarchy_list[i:i+100])
 	i+=100
 
-connection.commit()
+pdbeconnection.commit()
 
 
 
@@ -305,8 +302,8 @@ for row in fclass.readlines():
 		#print obj
 		class_list.append(obj)
 
-		# cursor.execute('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8,:9,:10,:11,:12,:13,:14,:15,:16,:17)' % (tables[3]+'_NEW'),obj)
-		# cursor.execute(query,scop_id=obj[0],entry_id=obj[1],ordinal=obj[2],auth_asym_id=obj[3],beg_seq=obj[4],begin_ins_code=obj[5],end_seq=obj[6],end_ins_code=obj[7],sccs=obj[8],sunid=obj[9],
+		# pdbecursor.execute('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8,:9,:10,:11,:12,:13,:14,:15,:16,:17)' % (tables[3]+'_NEW'),obj)
+		# pdbecursor.execute(query,scop_id=obj[0],entry_id=obj[1],ordinal=obj[2],auth_asym_id=obj[3],beg_seq=obj[4],begin_ins_code=obj[5],end_seq=obj[6],end_ins_code=obj[7],sccs=obj[8],sunid=obj[9],
 		# 	class_id=obj[10],
 		# 	fold_id=obj[11],
 		# 	superfamily_id=obj[12],
@@ -322,8 +319,8 @@ for row in fclass.readlines():
 fclass.close()
 
 
-cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8,:9,:10,:11,:12,:13,:14,:15,:16,:17)' % (tables[3]+'_TEST'),class_list)
-connection.commit()
+pdbecursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8,:9,:10,:11,:12,:13,:14,:15,:16,:17)' % (tables[3]+'_TEST'),class_list)
+pdbeconnection.commit()
 
 SQL="drop table " + tables[0] +";\
 	drop table " + tables[1] +";\
@@ -343,12 +340,12 @@ SQL="drop table " + tables[0] +";\
 
 
 # for command in SQL.split(';')[:-1]:
-# 	if not dosql(cursor,command):
-# 		cursor.close()
-# 		connection.close()
+# 	if not dosql(pdbecursor,command):
+# 		pdbecursor.close()
+# 		pdbeconnection.close()
 # 		sys.exit(-1)
 
-# connection.commit()
+# pdbeconnection.commit()
 
 
 print "Description: %d" % len(desc_list)    
@@ -356,8 +353,8 @@ print "Comments: %d" % len(comments_list)
 print "Hierarchy: %d" % len(hierarchy_list)
 print "Class: %d" % len(class_list)
 
-cursor.close()
-connection.close()
+pdbecursor.close()
+pdbeconnection.close()
 
 
 
