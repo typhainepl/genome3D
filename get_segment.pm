@@ -24,7 +24,7 @@ sub getSegmentScop{
 	}
 	
 	my $get_info_scop = <<"SQL";
-	insert into $database (entry,auth_asym_id,START,END,length,sccs,ssf,ordinal,domain)
+	insert into $database (entry_id,auth_asym_id,START,END,length,sccs,ssf,ordinal,domain)
 select e.entry_id, e.auth_asym_id, e."START", e."END", e."END"-e."START"+1 as LENGTH, s.sccs, s.superfamily_id, e.ordinal, e.sunid as DOMAIN
 from 
   sifts_admin_new.entity_scop e,
@@ -54,7 +54,7 @@ sub getSegmentCath{
 	}
 	
 	my $get_info_cath = <<"SQL";
-	insert into $database (entry,auth_asym_id,START,END,length,cathcode,ordinal,domain)
+	insert into $database (entry_id,auth_asym_id,START,END,length,cathcode,ordinal,domain)
 select entry_id, auth_asym_id, "START", "END", "END"-"START"+1 as LENGTH, accession, ordinal, domain
 from 
 	sifts_admin_new.entity_cath
