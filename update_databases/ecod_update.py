@@ -134,7 +134,11 @@ clean_tmp(TMP)
 
 #drop old tables and create new ones
 for t in tables:
-    if not dosql(pdbecursor,'DROP TABLE '+t+'_NEW'):
+    if not dosql(pdbecursor,'DROP TABLE '+t+'_OLD'):
+        pdbecursor.close()
+        pdbeconnection.close()
+        sys.exit(-1)
+    if not dosql(pdbecursor,'ALTER TABLE '+t+'_NEW rename to '+t+'_OLD'):
         pdbecursor.close()
         pdbeconnection.close()
         sys.exit(-1)
@@ -241,21 +245,6 @@ pdbecursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8,:9,:10,:11
 
 pdbeconnection.commit()
 
-SQL="drop table " + tables[0] +";\
-    drop table " + tables[1] +";\
-    drop table " + tables[2] +";\
-    alter table " + tables[0] + "_NEW rename to " + tables[0] + ";\
-    alter table " + tables[1] + "_NEW rename to " + tables[1] + ";\
-    alter table " + tables[2] + "_NEW rename to " + tables[2] + ";\
-    commit;"
- 
-for command in SQL.split(';')[:-1]:
-        if not dosql(pdbecursor,command):
-            pdbecursor.close()
-            pdbeconnection.close()
-            sys.exit(-1)
- 
-pdbeconnection.commit()
 
 pdbecursor.close()
 pdbeconnection.close()

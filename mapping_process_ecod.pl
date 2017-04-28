@@ -38,11 +38,25 @@ my @tables = ('SEGMENT_CATH','SEGMENT_ECOD','SEGMENT_CATH_ECOD','DOMAIN_MAPPING'
 my %tables_new;
 
 foreach my $t (@tables){
-	my $drop = 'DROP TABLE '.$t.'_ECOD_OLD';
-	my $alter = 'ALTER TABLE '.$t.'_ECOD_NEW rename to '.$t.'_ECOD_OLD';
-	$pdbe_dbh->do($drop) or die "Can't delete ".$t."_ECOD_NEW table\n\n";
-	$pdbe_dbh->do($alter) or die "Can't rename ".$t."_ECOD_NEW table\n\n";
-	if ($t !~ /ECOD/ && $t ne 'SEGMENT_CATH'){
+	
+	if ($t ne 'SEGMENT_ECOD' && $t ne 'SEGMENT_CATH'){
+		my $var_new;
+		my $var_old;
+		if ($t eq 'SEGMENT_CATH_ECOD'){
+			$var_new = '_NEW';
+			$var_old = '_OLD';
+		}
+		else{
+			$var_new = '_ECOD_NEW';
+			$var_old = '_ECOD_OLD';
+		}
+		my $drop = 'DROP TABLE '.$t.$var_old;
+		my $alter = 'ALTER TABLE '.$t.$var_new.' rename to '.$t.$var_old;
+		$pdbe_dbh->do($drop) or die "Can't delete ".$t.$var_old." table\n\n";
+		$pdbe_dbh->do($alter) or die "Can't rename ".$t.$var_new." table\n\n";
+	}
+
+	if ($t !~ /ECOD/ && $t ne 'SEGMENT_CATH' && $t ne 'SEGMENT_ECOD'){
 		$tables_new{$t}=$t.'_ECOD_NEW';
 	}
 	else{
