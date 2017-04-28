@@ -81,7 +81,7 @@ cleanDirectory($mdaDirectory);
 get_mda_blocks::printMDABlocks($mdaDirectory, $pdbe_dbh, %tables_new);
 
 #print other mda info (one instance, equivalent split, class4...)
-get_chop_homo::getChopping($pdbe_dbh,$mdaDirectory,$representative,%tables_new);
+get_chop_homo::getChopping($pdbe_dbh, $mdaDirectory, $representative, 'scop', %tables_new);
 
 #print equivalent gold pairs cluster blocks
 # get_gold_clusters::get_gold_clusters($pdbe_dbh,$blockFile,$goldFile, $tables_new{'NODE_MAPPING'});
