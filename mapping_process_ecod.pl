@@ -51,8 +51,6 @@ foreach my $t (@tables){
 }
 
 $pdbe_dbh->do("drop table SEGMENT_CATH_ECOD_TEST") or die;
-##$pdbe_dbh->do("drop table SEGMENT_CATH_TEST") or die;
-##$pdbe_dbh->do("drop table SEGMENT_ECOD_TEST") or die;
 $pdbe_dbh->do("drop table DOMAIN_MAPPING_ECOD_TEST") or die;
 $pdbe_dbh->do("drop table NODE_MAPPING_ECOD_TEST") or die;
 $pdbe_dbh->do("drop table BLOCK_CHAIN_ECOD_TEST") or die;
@@ -79,15 +77,15 @@ get_segment::createCombinedSegmentECOD($pdbe_dbh, $tables_new{'SEGMENT_ECOD'},$t
 
 # #calculate and create domain mapping
 domain_mapping::mapping($pdbe_dbh, $tables_new{'SEGMENT_ECOD'},$tables_new{'SEGMENT_CATH'}, $tables_new{'SEGMENT_CATH_ECOD'}, $tables_new{'DOMAIN_MAPPING'});
-#
-##node mapping
+
+#node mapping
 node_mapping::nodeMapping($pdbe_dbh,$tables_new{'SEGMENT_ECOD'},$tables_new{'SEGMENT_CATH'}, $tables_new{'DOMAIN_MAPPING'},$tables_new{'NODE_MAPPING'});
-#
-##clustering
+
+#clustering
 clustering::clustering($pdbe_dbh,$tables_new{'NODE_MAPPING'},$tables_new{'CLUSTER'});
 
 #get medal equivalence
-#get_medals::getMedals($pdbe_dbh,$tables_new{'NODE_MAPPING'});
+get_medals::getMedals($pdbe_dbh,$tables_new{'NODE_MAPPING'});
 
 #get MDA blocks
 get_mda_blocks::getMDABlocks($pdbe_dbh, $mdaDirectory, $representative, 'ecod', %tables_new);
@@ -98,7 +96,7 @@ cleanDirectory($mdaDirectory);
 get_mda_blocks::printMDABlocks($mdaDirectory, $pdbe_dbh, %tables_new);
 
 #print other mda info (one instance, equivalent split, class4...)
-#get_chop_homo::getChopping($pdbe_dbh,$mdaDirectory, $representative, %tables_new);
+get_chop_homo::getChopping($pdbe_dbh, $mdaDirectory, $representative, 'ecod', %tables_new);
 
 #print equivalent gold pairs cluster blocks
 #get_gold_clusters::get_gold_clusters($pdbe_dbh,$blockFile,$goldFile, $tables_new{'NODE_MAPPING'});

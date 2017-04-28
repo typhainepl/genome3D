@@ -10,11 +10,20 @@ use warnings;
 use DBI;
 
 sub getChopping{
-	my ($pdbe_dbh, $directory, $representative, %db) = @_;
+	my ($pdbe_dbh, $directory, $representative, $value, %db) = @_;
 
-	my $segment_scop_db = $db{'SEGMENT_SCOP'};
+	#initialize databases names
+	my $segment_scop_db;
+	
+	if ($value eq 'scop'){
+		$segment_scop_db = $db{'SEGMENT_SCOP'};
+	}
+	else{
+		$segment_scop_db = $db{'SEGMENT_ECOD'};
+	}
+
 	my $segment_cath_db = $db{'SEGMENT_CATH'};
-	my $domain_mapping  = $db{'PDBE_ALL_DOMAIN_MAPPING'};
+	my $domain_mapping  = $db{'DOMAIN_MAPPING'};
 	my $cluster_db 		= $db{'CLUSTER'};
 
 	# global from segment
@@ -23,9 +32,11 @@ sub getChopping{
 	my (%mapped_domain, %mapped_chainScop, %mapped_chainCath);
 
 	#---- preparing request ----#
+	
+	$pdbe_dbh->{LongReadLen} = 512 * 1024;
 
 	my $cluster_sth = $pdbe_dbh->prepare("SELECT * FROM $cluster_db order by length(nodes) desc");
-	my $scop_sth = $pdbe_dbh->prepare("select * from $segment_scop_db");
+	my $scop_sth = $pdbe_dbh->prepare("select * from $segment_scop_db where \"START\" is not null and \"END\" is not null");
 	my $cath_sth = $pdbe_dbh->prepare("select * from $segment_cath_db");
 	my $map_sth = $pdbe_dbh->prepare("select * from $domain_mapping");
 
@@ -66,7 +77,8 @@ sub getChopping{
 		my $region = $key."::".$SiftsStart."-".$SiftsEnd;
 		my $SCCS = $xref_row->{SCCS};
 		my $ScopNode;
-		if ($SCCS =~ /(.+\..+\..+)\..+/) {$ScopNode = $1;}
+		if ($SCCS =~ /([a-z]\.\d+\.\d+)\./) {$ScopNode = $1;}
+		elsif ($SCCS =~ /(\d+\.\d+)\./) {$ScopNode = $1;}
 		
 		my $MappedRegionKey = $ScopID.";".$Ordinal;
 		$DomainLength{$MappedRegionKey} = $SiftLength;
