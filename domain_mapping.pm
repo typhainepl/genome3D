@@ -46,7 +46,12 @@ sub mapping{
 		$data{$key}{SL} = $xref_row->{SCOP_LENGTH};
 		$data{$key}{CATHCODE} = $xref_row->{CATHCODE};
 		$data{$key}{SCCS} = $xref_row->{SCCS};
-		$data{$key}{SSF} = $xref_row->{SSF};
+		if ($xref_row->{SSF}){
+			$data{$key}{SSF} = $xref_row->{SSF};
+		}
+		else{
+			$data{$key}{SSF} = "";
+		}
 
 		my $CS = $data{$key}{CS} = $xref_row->{CATH_START};
 	 	my $CE = $data{$key}{CE} = $xref_row->{CATH_END};
@@ -131,7 +136,7 @@ sub mapping{
 				$length_CathMapped{$Dom_Combined} = $OverlapLength; 
 			}
 			else { 
-				$length_CathMapped{$Dom_Combined} = $length_CathMapped{$Dom_Combined} + $OverlapLength; 
+				$length_CathMapped{$Dom_Combined} += $OverlapLength; 
 			}
 
 			#scop
@@ -139,7 +144,7 @@ sub mapping{
 				$length_ScopMapped{$Dom_Combined} = $OverlapLength; 
 			}
 			else { 
-				$length_ScopMapped{$Dom_Combined} = $length_ScopMapped{$Dom_Combined} + $OverlapLength; 
+				$length_ScopMapped{$Dom_Combined} += $OverlapLength; 
 			}
 			# end calculate mapped length
 		}
@@ -215,7 +220,7 @@ sub getSegmentLength{
 	my %length;
 
 	# get full length of each domain (combined ordinals)
-	my $segment = $pdbe_dbh->prepare("select distinct * from $table");
+	my $segment = $pdbe_dbh->prepare("select distinct * from $table where \"START\" is not null and \"END\" is not null ");
 	$segment->execute();
 
 	while ( my $xref_row = $segment->fetchrow_hashref ) {

@@ -8,6 +8,7 @@ package clustering;
 use strict;
 use warnings;
 use DBI;
+use DBD::Oracle qw(:ora_types);
 
 sub clustering{
 	my ($pdbe_dbh,$node_mapping_db,$cluster_db) = @_;
@@ -94,6 +95,7 @@ sub clustering{
 
 		}
 		$nodes =~ s/\s+$//;
+		
 		insertCluster($pdbe_dbh,$parent,$nodes,$cluster_db);
 
 		$counter=0;
@@ -102,9 +104,15 @@ sub clustering{
 
 sub insertCluster{
 	my ($pdbe_dbh, $parent, $nodes, $cluster_db) = @_;
+	
+	my $sql = <<"SQL";
+insert into $cluster_db (cluster_node, nodes) values (?,?)
+SQL
 
-	my $request = $pdbe_dbh->prepare("insert into $cluster_db (cluster_node, nodes) values ('$parent', '$nodes')");
-	$request->execute() or die "Failed to insert data into CLUSTER table\n";
+	my $request_sth = $pdbe_dbh->prepare($sql);
+	$request_sth->bind_param(2, $nodes, { ora_type => ORA_CLOB });
+	
+	$request_sth->execute($parent,$nodes) or die "Failed to insert data into CLUSTER table\n";
 }
 
 

@@ -12,13 +12,23 @@ use DBI;
 use Data::Dumper;
  
 sub getMDABlocks{
-	my ($pdbe_dbh, $directory, $representative, %db) = @_;
+	my ($pdbe_dbh, $directory, $representative, $value, %db) = @_;
 
 	print "determine MDA blocks\n";
 	#initialize databases names
-	my $segment_scop_db = $db{'SEGMENT_SCOP'};
+	my $segment_scop_db;
+	my $combined_segment_db;
+	
+	if ($value eq 'scop'){
+		$segment_scop_db = $db{'SEGMENT_SCOP'};
+		$combined_segment_db = $db{'SEGMENT_CATH_SCOP'};
+	}
+	else{
+		$segment_scop_db = $db{'SEGMENT_ECOD'};
+		$combined_segment_db = $db{'SEGMENT_CATH_ECOD'};
+	}
 	my $segment_cath_db = $db{'SEGMENT_CATH'};
-	my $domain_mapping  = $db{'PDBE_ALL_DOMAIN_MAPPING'};
+	my $domain_mapping  = $db{'DOMAIN_MAPPING'};
 	my $cluster_db 		= $db{'CLUSTER'};
 	my $block_chain_db	= $db{'BLOCK_CHAIN'};
 	my $mda_blocks_db	= $db{'MDA_BLOCK'};
@@ -26,9 +36,12 @@ sub getMDABlocks{
 	my $block_uniprot_db= $db{'BLOCK_UNIPROT'};
 
 	#---- preparing request ----#
+#	print $block_uniprot_db."\n";
+	
+	$pdbe_dbh->{LongReadLen} = 512 * 1024;
 
-	my $cluster_sth = $pdbe_dbh->prepare("SELECT * FROM $cluster_db order by length(nodes) desc");
-	my $scop_sth = $pdbe_dbh->prepare("select * from $segment_scop_db");
+	my $cluster_sth = $pdbe_dbh->prepare("select * from $cluster_db order by length(nodes) desc");
+	my $scop_sth = $pdbe_dbh->prepare("select * from $segment_scop_db where \"START\" is not null and \"END\" is not null");
 	my $cath_sth = $pdbe_dbh->prepare("select * from $segment_cath_db");
 	my $map_sth = $pdbe_dbh->prepare("select * from $domain_mapping");
 
@@ -57,7 +70,8 @@ sub getMDABlocks{
 		my $region = $key."::".$SiftsStart."-".$SiftsEnd;
 		my $SCCS = $xref_row->{SCCS};
 		my $ScopNode;
-		if ($SCCS =~ /(.+\..+\..+)\..+/) {$ScopNode = $1;}
+		if ($SCCS =~ /([a-z]+\.\d+\.\d+)\./) {$ScopNode = $1;}
+		elsif ($SCCS =~ /(\d+\.\d+)\./) {$ScopNode = $1;}
 		
 		my $MappedRegionKey = $ScopID.";".$Ordinal;
 		$DomainLength{$MappedRegionKey} = $SiftLength;
@@ -144,7 +158,6 @@ sub getMDABlocks{
 	#--------------Start: Main Program-----------#
 
 	my %rep = get_representative($representative);
-
 
 	$cluster_sth->execute() or die "! Error: encountered an error when executing SQL statement:\n";
 
@@ -453,16 +466,20 @@ sub printMDABlocks{
 	my $cluster_block_db= $db{'CLUSTER_BLOCK'};
 
 	#preparing request to get info for each block
+	$pdbe_dbh->{LongReadLen} = 512 * 1024;
+	
 	my $get_cluster_sth = $pdbe_dbh->prepare("select * from $cluster_db order by length(nodes) asc") or die;
 
 	my $get_mda_block_sth = $pdbe_dbh->prepare("select * from $cluster_block_db where cluster_node=? order by percentage desc, block desc") or die;
+	
+	my $get_positions_sth = $pdbe_dbh->prepare("select * from $mda_blocks_db where block=?") or die;
 
 	my $get_count_mda_block_sth = $pdbe_dbh->prepare("select count(*) from $cluster_block_db where cluster_node=?") or die;
 
 	my $get_total_uniprotid_cluster = $pdbe_dbh->prepare("select count(distinct(accession)) from sifts_admin_new.sifts_xref_residue sxr
-join block_chain_new bc 
+join $block_chain_db bc 
 on substr(bc.chain_id,0,4)=sxr.entry_id and substr(bc.chain_id,5,5)=sxr.auth_asym_id
-join cluster_block_new cb on cb.block=bc.block
+join $cluster_block_db cb on cb.block=bc.block
 where cluster_node=? and accession is not null") or die;
 
 	my $get_chain_sth = $pdbe_dbh->prepare("select * from $block_chain_db where block=? order by chain_id") or die;
@@ -486,6 +503,7 @@ where cluster_node=? and accession is not null") or die;
 		$get_mda_block_sth->execute($cluster_node) or die;
 		$get_count_mda_block_sth->execute($cluster_node) or die;
 		$get_total_uniprotid_cluster->execute($cluster_node) or die;
+		
 
 		#count number of block found for this cluster
 		my $blockcount = 0;
@@ -522,6 +540,17 @@ where cluster_node=? and accession is not null") or die;
 
 			print MDABLOCKS $block;
 			print MDAINFO $block;
+			
+			#for each block, get the positions of the domains for CATH and SCOP
+			$get_positions_sth->execute($block) or die;
+			my $pos_cath;
+			my $pos_scop;
+			while ( my @row3 = $get_positions_sth->fetchrow_array ) {
+				$pos_cath = $row3[1];
+				$pos_scop = $row3[2];
+			}
+#			print $pos_cath." ".$pos_scop."\n";
+			print MDABLOCKS "\n".$pos_cath." ".$pos_scop;
 
 			if ($row2->{GOLD}){
 				print MDABLOCKS "\n!!! GOLD BLOCK !!!";
