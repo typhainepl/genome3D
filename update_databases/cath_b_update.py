@@ -2,34 +2,38 @@
 
 ##
 # @author J.M. Dana, T. Paysan-Lafosse
-# @brief This script creates CATH tables, next used by SIFTS and PDBe website
+# @brief This script creates CATH_b tables, next used by SIFTS and PDBe website
 ##
 
 import urllib2
 import os
-
 import cx_Oracle
 import sys
 import gzip
 import re
 import time
+import ConfigParser
 
-dirname = os.path.dirname(__file__)
-if not dirname:
-	dirname = '.'
+sys.path.insert(0,'/Users/typhaine/Desktop/genome3D/config/')
+sys.path.insert(0,'/nfs/msd/work2/typhaine/genome3D/config/')
 
-sys.path.insert(0,'/nfs/msd/work2/sifts_newDB/update_xref_databases/common/')
+from config import dosql
 
-from common import dosql
+configdata = ConfigParser.RawConfigParser()
+configdata.read([os.path.expanduser('~/Desktop/genome3D/config/db.cfg'), '/nfs/msd/work2/typhaine/genome3D/config/db.cfg'])
+
+#Connexion to PDBE_TEST database
+PDBEUSER=configdata.get('Global', 'pdbeUser')
+PDBEPASS=configdata.get('Global', 'pdbePass')
+PDBEHOST=configdata.get('Global', 'pdbeHost')
+
+pdbeconnection = cx_Oracle.connect(PDBEUSER+'/'+PDBEPASS+'@'+PDBEHOST)
+pdbecursor = pdbeconnection.cursor()
 
 REPO = "http://download.cathdb.info/cath/releases/daily-release/newest/"
 NAMES_GZ = REPO + "cath-b-newest-names.gz"
 DOMAIN_DESC_GZ = REPO + "cath-b-newest-all.gz"
 TMP='cath_tmp'
-
-USER='typhaine'
-PASS='typhaine55'
-HOST='pdbe_test'
 
 tables=['CATH_B_NAME','CATH_B_DOMAIN','CATH_B_SEGMENT']
 
@@ -102,34 +106,31 @@ clean_tmp(TMP)
 names=download_file(NAMES_GZ,TMP)
 domains=download_file(DOMAIN_DESC_GZ,TMP)
 
-connection = cx_Oracle.connect(USER+'/'+PASS+'@'+HOST)
-cursor=connection.cursor()
-
 for t in tables:
-	if not dosql(cursor,'DROP TABLE '+t+'_NEW'):
-		cursor.close()
-		connection.close()
+	if not dosql(pdbecursor,'DROP TABLE '+t+'_NEW'):
+		pdbecursor.close()
+		pdbeconnection.close()
 		sys.exit(-1)
 
-connection.commit()
+pdbeconnection.commit()
 
-if not dosql(cursor,name):
-	cursor.close()
-	connection.close()
+if not dosql(pdbecursor,name):
+	pdbecursor.close()
+	pdbeconnection.close()
 	sys.exit(-1)
 	
-if not dosql(cursor,domain):
-	cursor.close()
-	connection.close()
+if not dosql(pdbecursor,domain):
+	pdbecursor.close()
+	pdbeconnection.close()
 	sys.exit(-1)
 	
-if not dosql(cursor,segment):
-	cursor.close()
-	connection.close()
+if not dosql(pdbecursor,segment):
+	pdbecursor.close()
+	pdbeconnection.close()
 	sys.exit(-1)
 
 
-connection.commit()
+pdbeconnection.commit()
 
 
 # enter data in CATH_B_NAME table 
@@ -152,16 +153,16 @@ for row in fnames.readlines():
 
 	nodes.append(obj)
 
-cursor.executemany('INSERT INTO %s VALUES(:1,:2)' % (tables[0]+'_NEW'),nodes)
-connection.commit()
+pdbecursor.executemany('INSERT INTO %s VALUES(:1,:2)' % (tables[0]+'_NEW'),nodes)
+pdbeconnection.commit()
 
 fnames.close()
 
 
 
 #get the description corresponding to the number from CATH_DOMAIN for class, architecture, topology and homology superfamily
-cursor.execute("select distinct(cathcode),class,arch,topol,homol from CATH_DOMAIN");
-cathinfo = cursor.fetchall();
+pdbecursor.execute("select distinct(cathcode),class,arch,topol,homol from CATH_DOMAIN");
+cathinfo = pdbecursor.fetchall();
 
 homologies = {}
 classes = {}
@@ -189,7 +190,7 @@ domains=[]
 segments=[]
 
 print "Get data from files"
-cursor.prepare("select name,source from CATH_DOMAIN where domain= :domain")
+pdbecursor.prepare("select name,source from CATH_DOMAIN where domain= :domain")
 # Read data from all.txt file
 for row in fdomains.readlines():
 	# data for domain table
@@ -212,8 +213,8 @@ for row in fdomains.readlines():
 	source = None
 
 	# get name and source from CATH_DOMAIN
-	cursor.execute(None, domain = domain);
-	for d in cursor:
+	pdbecursor.execute(None, domain = domain);
+	for d in pdbecursor:
 		name = d[0].read()
 		source = d[1].read()
 	
@@ -265,16 +266,16 @@ print "insert data into %s_NEW table" % (tables[1])
 
 # The database can't deal with the CLOBs (hangs!!!) so I have insert 100 at a time... 
 while i < len(domains):
-	cursor.setinputsizes(*inputsizes)
-	cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8,:9,:10,:11)' % (tables[1]+'_NEW'),domains[i:i+100])
+	pdbecursor.setinputsizes(*inputsizes)
+	pdbecursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8,:9,:10,:11)' % (tables[1]+'_TEST'),domains[i:i+100])
 	i+=100
 
-connection.commit()    
+pdbeconnection.commit()    
 
 print "insert data into %s_NEW table" % (tables[2])
 
-cursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8)' % (tables[2]+'_NEW'),segments)
-connection.commit()    
+pdbecursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8)' % (tables[2]+'_NEW'),segments)
+pdbeconnection.commit()    
 
 
 SQL="drop table " + tables[0] +";\
@@ -294,15 +295,15 @@ SQL="drop table " + tables[0] +";\
 #     commit;"
 	
 for command in SQL.split(';')[:-1]:
-	if not dosql(cursor,command):
-		cursor.close()
-		connection.close()
+	if not dosql(pdbecursor,command):
+		pdbecursor.close()
+		pdbeconnection.close()
 		sys.exit(-1)
 	
 
-connection.commit()   
+pdbeconnection.commit()   
 
 print "End update\n"
 
-cursor.close()
-connection.close()
+pdbecursor.close()
+pdbeconnection.close()
