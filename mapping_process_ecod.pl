@@ -27,7 +27,7 @@ use get_gold_clusters;
 my %config = do './config/config.pl';    
 my $pdbe_dbh = DBI->connect("DBI:Oracle:".$config{db}, $config{user}, $config{password});
 
-print "Mapping process started\n";
+print "Mapping process ECOD started ".localtime()."\n";
 
 #delete and rename existing tables
 #print "drop tables\n";
@@ -49,7 +49,7 @@ foreach my $t (@tables){
 		$tables_new{$t}=$t.'_TEST';
 	}
 }
-
+#
 $pdbe_dbh->do("drop table SEGMENT_CATH_ECOD_TEST") or die;
 $pdbe_dbh->do("drop table DOMAIN_MAPPING_ECOD_TEST") or die;
 $pdbe_dbh->do("drop table NODE_MAPPING_ECOD_TEST") or die;
