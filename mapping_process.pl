@@ -26,7 +26,7 @@ my $path="/nfs/msd/work2/typhaine/genome3D/";
 my %config = do $path.'./config/config.pl';    
 my $pdbe_dbh = DBI->connect("DBI:Oracle:".$config{db}, $config{user}, $config{password});
 
-print "Mapping process started\n";
+print "Mapping process SCOP started ".localtime()."\n";
 
 #delete and rename existing tables
 #print "drop tables\n";
