@@ -89,7 +89,7 @@ CREATE TABLE $combined_segment_db(
 	ssf number
 )
 SQL
-	$pdbe_dbh->do($create_segment_cath_scop) or die "Can't create xxxx$combined_segment_db table\n\n";
+	$pdbe_dbh->do($create_segment_cath_scop) or die "Can't create $combined_segment_db table\n\n";
 
 	my $create_domain_mapping = <<"SQL";
 CREATE TABLE $domain_mapping_db( 
