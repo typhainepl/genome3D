@@ -16,6 +16,7 @@ import search_unintegrated
 
 number = sys.argv[1]
 file_name = sys.argv[2]
+value = sys.argv[3]
 
 dirname = os.path.dirname(__file__)
 if not dirname:
@@ -76,7 +77,7 @@ def haveSameNumberOfDomains(nodes,number):
     scop_sf = []
 
     for domain in nodes:
-        if re.match("^[a-z]",domain):
+        if re.match("^[a-z]",domain) or re.match("^\d+\.\d+$",domain):
             nbScop+=1
             if number >= 3:
                 #search if the block is composed of more than one SCOP sf
@@ -110,10 +111,13 @@ def haveSameNumberOfDomains(nodes,number):
 
 
 
-def whiteSpace(pdbecursor,block):
+def whiteSpace(pdbecursor,block,value):
     #search is there is a domain not in this cluster in the block
-    getBlockPositions = "select positionCath,positionScop from mda_block_test where block=:block"
-
+    if value == 'SCOP':
+        getBlockPositions = "select positionCath,positionScop from mda_block_test where block=:block"
+    else:
+        getBlockPositions = "select positionCath,positionScop from mda_block_ecod_test where block=:block"
+        
     pdbecursor.execute(getBlockPositions,block=block)
     blockpos = pdbecursor.fetchall()
 
@@ -150,7 +154,7 @@ def compareBeginEndDomain(positions):
     return hasBlank
 
 
-def getUnintegratedBlocks(pdbecursor, ipprocursor, clusternode, number, unintegrated_file, nodes, unintegrated):
+def getUnintegratedBlocks(pdbecursor, ipprocursor, clusternode, number, unintegrated_file, nodes, unintegrated, value):
 
     # get the number of blocks in the cluster
     nbBlock = getNbBlocks(pdbecursor,clusternode)
@@ -159,7 +163,11 @@ def getUnintegratedBlocks(pdbecursor, ipprocursor, clusternode, number, unintegr
     seen = []
 
     # select the different blocks in the cluster
-    getBlocks = "select block from cluster_block_test where cluster_node=:clusternode"
+    if value == "SCOP":
+        getBlocks = "select block from cluster_block_test where cluster_node=:clusternode"
+    else:
+        getBlocks = "select block from cluster_block_ecod_test where cluster_node=:clusternode"
+        
     pdbecursor.execute(getBlocks, clusternode=clusternode)
     getBlocks_sth = pdbecursor.fetchall()
 
@@ -191,8 +199,8 @@ def getUnintegratedBlocks(pdbecursor, ipprocursor, clusternode, number, unintegr
             else:
                 if haveSameNumberOfDomains(blockDomains,number) == "more cath" or haveSameNumberOfDomains(blockDomains,number) == "more scop":
                     #if there isn't domains with undefined SF in the block
-                    if whiteSpace(pdbecursor,block) == 0 and clusternode not in seen:
-                        returnValues = search_unintegrated.getUnintegrated(pdbecursor,ipprocursor, nodes, unintegrated_file)
+                    if whiteSpace(pdbecursor,block,value) == 0 and clusternode not in seen:
+                        returnValues = search_unintegrated.getUnintegrated(pdbecursor,ipprocursor, nodes, unintegrated_file,value)
 
                         unintegrated['counters']['cath']+=returnValues[0]
                         unintegrated['counters']['scop']+=returnValues[1]
@@ -205,7 +213,7 @@ def getUnintegratedBlocks(pdbecursor, ipprocursor, clusternode, number, unintegr
     #if same number of domains in CATH and SCOP => GOLD BLOCK
     if toVerify == 1 and int(number) == 1:
         #search unintegrated CATH and SCOP SF in InterPro
-        returnValues = search_unintegrated.getUnintegrated(pdbecursor,ipprocursor,nodes,unintegrated_file)
+        returnValues = search_unintegrated.getUnintegrated(pdbecursor,ipprocursor,nodes,unintegrated_file,value)
 
         unintegrated['counters']['cath']+=returnValues[0]
         unintegrated['counters']['scop']+=returnValues[1]
@@ -218,10 +226,14 @@ def getUnintegratedBlocks(pdbecursor, ipprocursor, clusternode, number, unintegr
         
 
 
-def getCluster(pdbecursor,pdbecursor2,ipprocursor,number,file):
+def getCluster(pdbecursor,pdbecursor2,ipprocursor,number,file,value):
     #get all the clusters with same number of CATH and SCOP SF
 
-    getNodes = "select * from cluster_test order by cluster_node asc"
+    if value == 'SCOP':
+        getNodes = "select * from cluster_test order by cluster_node asc"
+    else:
+        getNodes = "select * from cluster_ecod_test order by cluster_node asc"
+        
     pdbecursor.execute(getNodes)
 #     get_nodes_sth=pdbecursor.fetchall()
 
@@ -237,6 +249,8 @@ def getCluster(pdbecursor,pdbecursor2,ipprocursor,number,file):
         for element in nodes:
             if re.match("^[a-z]",element) :
                 nbScop+=1
+            elif re.match("^\d+\.\d+$",element):
+                nbScop+=1
             else:
                 nbCath+=1
  
@@ -244,17 +258,17 @@ def getCluster(pdbecursor,pdbecursor2,ipprocursor,number,file):
         if int(number) == 1:
             if nbCath == nbScop:
                 # for each cluster, get the blocks
-                unintegrated = getUnintegratedBlocks(pdbecursor2, ipprocursor, cluster, number, file, nodes,unintegrated)
+                unintegrated = getUnintegratedBlocks(pdbecursor2, ipprocursor, cluster, number, file, nodes,unintegrated,value)
  
         #case of one CATH and one SCOP superfamily in the cluster
         elif int(number) == 2:
             if nbCath == nbScop and nbCath == 1:
-                unintegrated = getUnintegratedBlocks(pdbecursor2, ipprocursor, cluster, number, file, nodes,unintegrated)
+                unintegrated = getUnintegratedBlocks(pdbecursor2, ipprocursor, cluster, number, file, nodes,unintegrated,value)
  
         #case of two CATH SF for one SCOP, or one CATH SF for 2 SCOP in cluster
         elif int(number) == 3:
             if (nbCath == 2 and nbScop == 1) or (nbCath == 1 and nbScop == 2):
-                unintegrated = getUnintegratedBlocks(pdbecursor2, ipprocursor, cluster, number, file, nodes,unintegrated)
+                unintegrated = getUnintegratedBlocks(pdbecursor2, ipprocursor, cluster, number, file, nodes,unintegrated,value)
  
  
     return unintegrated
@@ -268,14 +282,15 @@ def getCluster(pdbecursor,pdbecursor2,ipprocursor,number,file):
 # clean_tmp(TMP)
 
 #get cluster and blocks and unintegrated
-unintegrated = getCluster(pdbecursor,pdbecursor2,ipprocursor,number,file_name)
+unintegrated = getCluster(pdbecursor,pdbecursor2,ipprocursor,number,file_name,value)
 
 file = open (file_name,'a')
 
-file.write("Resume:\n")
+file.write("\nResume:\n")
 file.write("GENE3D:"+str(unintegrated['counters']['cath'])+"\n")
-file.write("SUPERFAMILY:"+str(unintegrated['counters']['scop'])+"\n")
-file.write("PAIRS:"+str(unintegrated['counters']['pair']))
+if value == 'SCOP':
+    file.write("SUPERFAMILY   :"+str(unintegrated['counters']['scop'])+"\n")
+    file.write("PAIRS:"+str(unintegrated['counters']['pair']))
 
 # gold_cluster = unintegrated['gold_cluster']
 

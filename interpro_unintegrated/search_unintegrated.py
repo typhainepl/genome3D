@@ -7,9 +7,9 @@
 
 import re
 import comparepfam
+from scipy.optimize._tstutils import description
 
-def getUnintegrated(pdbecursor,ipprocursor,nodes,unintegrated_file):
-
+def getUnintegrated(pdbecursor,ipprocursor,nodes,unintegrated_file,value):
 
 	file = open(unintegrated_file,'a')
 
@@ -22,7 +22,6 @@ def getUnintegrated(pdbecursor,ipprocursor,nodes,unintegrated_file):
 	    left outer join interpro.entry e on (e.entry_ac=em.entry_ac)\
 	    where m.dbcode like :dbcode and 1=1 and 1=1 and 1=1 and m.method_ac=:method\
 	    group by e.entry_ac"
-
 
 	get_nb_protein = "select ct_prot from interpro_analysis.feature_summary where feature_id=:search"
 	
@@ -38,10 +37,10 @@ def getUnintegrated(pdbecursor,ipprocursor,nodes,unintegrated_file):
 
 	toReturn=[]
 
-	for value in nodes:
-		if re.match("^[a-z]",value):
+	for node in nodes:
+		if re.match("^[a-z]",node):
 			#search corresponding SSF signature
-			scopSSF = getSSF(pdbecursor,value)
+			scopSSF = getSSF(pdbecursor,node)
 			scop_search = "SSF"+str(scopSSF)
 			interpro_nodes.append(scop_search)
 
@@ -66,17 +65,37 @@ def getUnintegrated(pdbecursor,ipprocursor,nodes,unintegrated_file):
 
 				#if found signature but no corresponding InterPro identifier => unintegrated
 				if not row_ippro[0]:
-					toPrintScop+= "UNINTEGRATED: "+scop_search+" || "+nbprot+" || || || || ||" 
+					toPrintScop+= "UNINTEGRATED: "+scop_search+" || "+nbprot+" || || || || || ||" 
 					unintegrated_scop+=1
 				else:
-					toPrintScop+= scop_search+" || "+nbprot+" || || "+row_ippro[0]+" || none || || ||"
+					toPrintScop+= scop_search+" || "+nbprot+" || || || "+row_ippro[0]+" || none || ||"
+		
+		elif re.match("^\d+\.\d+$",node):
+			#search ECOD equivalence
+			interpro_nodes.append(node)
+			
+			table_description = getDescriptionECOD(pdbecursor, node)
+			description = ''
+			if len(table_description) != 0:
+				cpt = 0
+				for desc in table_description:
+					if cpt < len(table_description)-1:
+						description+=desc+"[[BR]]"
+					else:
+						description+=desc
+					cpt+=1
+			
+			if toPrintScop != '':
+				toPrintScop+="\n"
 
+			toPrintScop+="|| ECOD: "+node+" || || "+description+" || || || || ||" 
+			
 		else:
 			#search corresponding GENE3D signature
 			if cluster_node == '':
-				cluster_node=value
+				cluster_node=node
 
-			cath_search = "G3DSA:"+str(value)
+			cath_search = "G3DSA:"+str(node)
 			interpro_nodes.append(cath_search)
 
 			ipprocursor.execute(get_unintegrated,('X',cath_search)) or die
@@ -100,10 +119,10 @@ def getUnintegrated(pdbecursor,ipprocursor,nodes,unintegrated_file):
 
 				#if found signature but no corresponding InterPro identifier => unintegrated
 				if not row_ippro[0]:
-					toPrintCath+= "UNINTEGRATED: "+cath_search+" || "+nbprot+" || || || || ||"
+					toPrintCath+= "UNINTEGRATED: "+cath_search+" || "+nbprot+" || || || || || ||"
 					unintegrated_cath+=1
 				else:
-					toPrintCath+= cath_search+" || "+nbprot+" || || "+row_ippro[0]+" || none || || ||"
+					toPrintCath+= cath_search+" || "+nbprot+" || || || "+row_ippro[0]+" || none || ||"
 		
 	#determine if unintegrated pair
 	total = unintegrated_cath + unintegrated_scop
@@ -132,30 +151,29 @@ def getUnintegrated(pdbecursor,ipprocursor,nodes,unintegrated_file):
 	return toReturn
 
 
-def getBeginEnd(ipprocursor, search):
+def getDescriptionECOD(pdbecursor,ecod):
+	#search description for homology and topology levels ECOD description table
+	get_ecod_description = "select distinct h_name,t_name from ecod_description_test where f_id like '"+ecod+"%'"
 
-	ipprocursor.prepare("select pos_from, pos_to from match where method_ac=:method_ac")
-
-	begin = 0
-	end   = 0
-	cpt	  = 0
-
-	ipprocursor.execute(None,search)
-	search_begin_end_dbh = ipprocursor.fetchall()
-
-	for row in search_begin_end_dbh:
-		begin_temp = row[2]
-		end_temp   = row[3]
-
-		if cpt == 0:
-			begin = begin_temp
-			end   = end_temp
-		else:
-			if begin_temp < begin and begin_temp < end:
-				begin = begin_temp
-
-			if end_temp > end and end_temp > begin:
-				end = end_temp
+	pdbecursor.execute(get_ecod_description)
+	request = pdbecursor.fetchall()
+	
+	table_description=list()
+	
+	for all_row in request:
+		if all_row[0] and all_row[1] : #Homology and Topology description found
+			description = "H: "+all_row[0]+", T: "+all_row[1]
+		elif  all_row[1] : #Only Topology description found
+			description = "T: "+all_row[1]
+		elif all_row[0] : #Only Homology description found
+			description = "H: "+all_row[0]	
+		else: #No description found
+			description = ''
+			
+		if description != '':
+			table_description.append(description)
+	
+	return table_description
 
 
 def getSSF(pdbecursor,scop):
