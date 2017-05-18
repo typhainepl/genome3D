@@ -6,7 +6,7 @@ import cx_Oracle
 import re
 import ConfigParser
 import sys
-
+import time
 	
 sys.path.insert(0,'/Users/typhaine/Desktop/genome3D/config/')
 sys.path.insert(0,'/nfs/msd/work2/typhaine/genome3D/config/')
@@ -111,8 +111,17 @@ def download_file(url,path):
 		
 	return filename
 			
+			
+### MAIN program ###
+		
+#get current date
+datestart = time.strftime("%d/%m/%Y at %H:%M:%S")
+print "##### SCOPE update started %s #####" %(datestart)
+
+#clean repertory
 clean_tmp(TMP)
 
+#drop old tables and create new ones
 for t in tables:
 	if not dosql(pdbecursor,'DROP TABLE '+t+'_NEW'):
 		pdbecursor.close()
@@ -134,12 +143,11 @@ for t in [t_description,comment,hierarchy,classtable]:
 pdbeconnection.commit()   
 
 
-
-#description
+## description ##
 print "insert data into %s_NEW table" % (tables[0])
 
+#download new data
 desc=download_file(DESC_REPO,TMP)
-
 fdesc=open(desc)
 
 desc_list=[]
@@ -152,11 +160,7 @@ for row in fdesc.readlines():
 	
 	obj=(sunid,entry_type,sccs,scop_id,description)
 
-	# print obj
-	
 	desc_list.append(obj)
-
-	# pdbecursor.execute('INSERT INTO %s VALUES (:1,:2,:3,:4,:5)' % (tables[0]+'_NEW'),obj)
 
 fdesc.close()
 
@@ -165,9 +169,10 @@ pdbeconnection.commit()
 
 
 
-#comments
+## comments ##
 print "insert data into %s_NEW table" % (tables[1])
 
+#download new data
 comments=download_file(COMMENTS_REPO,TMP)
 fcomments=open(comments)
 
@@ -184,7 +189,6 @@ for row in fcomments.readlines():
 	
 	for (comment,ordinal) in zip(comment_text,range(len(comment_text))):
 		obj=(sunid,ordinal+1,comment.lstrip())
-		#print obj
 		comments_list.append(obj)         
 
 fcomments.close()
@@ -194,9 +198,10 @@ pdbeconnection.commit()
 
 
 
-# #hierarchy
+## hierarchy ##
 print "insert data into %s_NEW table" % (tables[2])	
 
+#download new data
 hierarchy=download_file(HIERARCHY_REPO,TMP)
 fhierarchy=open(hierarchy)
 
@@ -213,11 +218,7 @@ for row in fhierarchy.readlines():
 	
 	obj=(sunid,parent_id,childs)
 	
-	# print obj
-
 	hierarchy_list.append(obj)
-	
-	# pdbecursor.execute('INSERT INTO %s VALUES(:1,:2,:3)' % (tables[2]+'_NEW'),obj)
 
 fhierarchy.close()
 
@@ -237,9 +238,10 @@ pdbeconnection.commit()
 
 
 
-#classification
+## classification ##
 print "insert data into %s_NEW table" % (tables[3])
 
+#download new data
 classification=download_file(CLASS_REPO,TMP)
 fclass=open(classification)
 
@@ -270,7 +272,6 @@ for row in fclass.readlines():
 			auth_asym_id=c.split(':')[0]
 	
 			if '-' in c:
-				# begin=c.split(':')[1].rsplit('-',1)[0]
 				limit = c.split(':')[1]
 				m = re.match(r"(-?\d+[A-Z]?)-(-?\d+[A-Z]?)",limit)
 
@@ -280,9 +281,7 @@ for row in fclass.readlines():
 				if begin[-1].isalpha():
 					beg_ins_code=begin[-1]
 					begin=begin[:-1]
-				
-				# end=c.split(':')[1].rsplit('-',1)[1]
-				
+
 				if end[-1].isalpha():
 					end_ins_code=end[-1]
 					end=end[:-1]
@@ -298,21 +297,8 @@ for row in fclass.readlines():
 				classes_split[5].split('=')[1],
 				classes_split[6].split('=')[1]
 				)
-					   
-		#print obj
-		class_list.append(obj)
 
-		# pdbecursor.execute('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8,:9,:10,:11,:12,:13,:14,:15,:16,:17)' % (tables[3]+'_NEW'),obj)
-		# pdbecursor.execute(query,scop_id=obj[0],entry_id=obj[1],ordinal=obj[2],auth_asym_id=obj[3],beg_seq=obj[4],begin_ins_code=obj[5],end_seq=obj[6],end_ins_code=obj[7],sccs=obj[8],sunid=obj[9],
-		# 	class_id=obj[10],
-		# 	fold_id=obj[11],
-		# 	superfamily_id=obj[12],
-		# 	family_id=obj[13],
-		# 	domain_id=obj[14],
-		# 	species_id=obj[15],
-		# 	protein_id=obj[16],            
-		# )
-		
+		class_list.append(obj)		
 		
 		ordinal+=1
 
@@ -347,11 +333,11 @@ for command in SQL.split(';')[:-1]:
 
 pdbeconnection.commit()
 
-
-print "Description: %d" % len(desc_list)    
-print "Comments: %d" % len(comments_list)
-print "Hierarchy: %d" % len(hierarchy_list)
-print "Class: %d" % len(class_list)
+print "End update SCOPE\n"
+# print "Description: %d" % len(desc_list)    
+# print "Comments: %d" % len(comments_list)
+# print "Hierarchy: %d" % len(hierarchy_list)
+# print "Class: %d" % len(class_list)
 
 pdbecursor.close()
 pdbeconnection.close()

@@ -6,6 +6,7 @@ import cx_Oracle
 import re
 import ConfigParser
 import sys
+import time
 
 dirname = os.path.dirname(__file__)
 if not dirname:
@@ -129,6 +130,10 @@ def find_seq(comment_list,class_list,submpdb,subseqid,ordinal,uid,domain_id,pdb,
 
 ### MAIN program ###
              
+#get current date
+datestart = time.strftime("%d/%m/%Y at %H:%M:%S")
+print "##### ECOD update started %s #####" %(datestart)
+
 #clean repertory
 clean_tmp(TMP)
 
@@ -153,7 +158,7 @@ for t in [t_description,comment,classtable]:
     
 pdbeconnection.commit()   
   
-#get the data
+#download new data
 desc=download_file(REPO,TMP)
 
 # desc = dirname+'/'+TMP+'/ecod.latest.domains.txt'
@@ -171,7 +176,6 @@ for row in fdesc.readlines():
     ordinal = 1
     chains = []
     
-#         print row /
     #remove double quotes
     row = row.replace('"','')
     #get the data
@@ -233,8 +237,7 @@ for row in fdesc.readlines():
         
 
 fdesc.close()
-print "parsing ok"
-# print class_list
+print "parsing ok, insert data in database"
 
 print "insert data into %s_NEW table" % (tables[0])
 pdbecursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8)' % (tables[0]+'_NEW'),desc_list)
@@ -245,6 +248,7 @@ pdbecursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8,:9,:10,:11
 
 pdbeconnection.commit()
 
+print "End update ECOD\n"
 
 pdbecursor.close()
 pdbeconnection.close()
