@@ -130,10 +130,11 @@ def find_seq(comment_list,class_list,submpdb,subseqid,ordinal,uid,domain_id,pdb,
 
 ### MAIN program ###
              
-#clean repertory
+#get current date
 datestart = time.strftime("%d/%m/%Y at %H:%M:%S")
 print "##### ECOD update started %s #####" %(datestart)
 
+#clean repertory
 clean_tmp(TMP)
 
 #drop old tables and create new ones
@@ -153,7 +154,7 @@ for t in [t_description,comment,classtable]:
     
 pdbeconnection.commit()   
   
-#get the data
+#download new data
 desc=download_file(REPO,TMP)
 
 # desc = dirname+'/'+TMP+'/ecod.latest.domains.txt'
@@ -171,7 +172,6 @@ for row in fdesc.readlines():
     ordinal = 1
     chains = []
     
-#         print row /
     #remove double quotes
     row = row.replace('"','')
     #get the data
@@ -233,8 +233,7 @@ for row in fdesc.readlines():
         
 
 fdesc.close()
-print "parsing ok"
-# print class_list
+print "parsing ok, insert data in database"
 
 print "insert data into %s_TEST table" % (tables[0])
 pdbecursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8)' % (tables[0]+'_TEST'),desc_list)
@@ -260,6 +259,8 @@ pdbeconnection.commit()
 #             sys.exit(-1)
  
 pdbeconnection.commit()
+
+print "End update ECOD\n"
 
 pdbecursor.close()
 pdbeconnection.close()

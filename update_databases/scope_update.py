@@ -112,14 +112,16 @@ def download_file(url,path):
 	return filename
 			
 			
-			
 ### MAIN program ###
 		
+#get current date
 datestart = time.strftime("%d/%m/%Y at %H:%M:%S")
 print "##### SCOPE update started %s #####" %(datestart)
 
+#clean repertory
 clean_tmp(TMP)
 
+#drop old tables and create new ones
 for t in tables:
 	if not dosql(pdbecursor,'DROP TABLE '+t+'_TEST'):
 		pdbecursor.close()
@@ -141,12 +143,11 @@ for t in [t_description,comment,hierarchy,classtable]:
 pdbeconnection.commit()   
 
 
-
-#description
+## description ##
 print "insert data into %s_TEST table" % (tables[0])
 
+#download new data
 desc=download_file(DESC_REPO,TMP)
-
 fdesc=open(desc)
 
 desc_list=[]
@@ -159,8 +160,6 @@ for row in fdesc.readlines():
 	
 	obj=(sunid,entry_type,sccs,scop_id,description)
 
-	# print obj
-	
 	desc_list.append(obj)
 
 	# pdbecursor.execute('INSERT INTO %s VALUES (:1,:2,:3,:4,:5)' % (tables[0]+'_NEW'),obj)
@@ -172,9 +171,10 @@ pdbeconnection.commit()
 
 
 
-#comments
+## comments ##
 print "insert data into %s_TEST table" % (tables[1])
 
+#download new data
 comments=download_file(COMMENTS_REPO,TMP)
 fcomments=open(comments)
 
@@ -201,9 +201,10 @@ pdbeconnection.commit()
 
 
 
-# #hierarchy
+## hierarchy ##
 print "insert data into %s_TEST table" % (tables[2])	
 
+#download new data
 hierarchy=download_file(HIERARCHY_REPO,TMP)
 fhierarchy=open(hierarchy)
 
@@ -244,9 +245,10 @@ pdbeconnection.commit()
 
 
 
-#classification
+## classification ##
 print "insert data into %s_TEST table" % (tables[3])
 
+#download new data
 classification=download_file(CLASS_REPO,TMP)
 fclass=open(classification)
 
@@ -277,7 +279,6 @@ for row in fclass.readlines():
 			auth_asym_id=c.split(':')[0]
 	
 			if '-' in c:
-				# begin=c.split(':')[1].rsplit('-',1)[0]
 				limit = c.split(':')[1]
 				m = re.match(r"(-?\d+[A-Z]?)-(-?\d+[A-Z]?)",limit)
 
@@ -287,9 +288,7 @@ for row in fclass.readlines():
 				if begin[-1].isalpha():
 					beg_ins_code=begin[-1]
 					begin=begin[:-1]
-				
-				# end=c.split(':')[1].rsplit('-',1)[1]
-				
+
 				if end[-1].isalpha():
 					end_ins_code=end[-1]
 					end=end[:-1]
@@ -354,11 +353,11 @@ SQL="drop table " + tables[0] +";\
 
 # pdbeconnection.commit()
 
-
-print "Description: %d" % len(desc_list)    
-print "Comments: %d" % len(comments_list)
-print "Hierarchy: %d" % len(hierarchy_list)
-print "Class: %d" % len(class_list)
+print "End update SCOPE\n"
+# print "Description: %d" % len(desc_list)    
+# print "Comments: %d" % len(comments_list)
+# print "Hierarchy: %d" % len(hierarchy_list)
+# print "Class: %d" % len(class_list)
 
 pdbecursor.close()
 pdbeconnection.close()

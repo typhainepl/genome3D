@@ -103,11 +103,13 @@ def download_file(url,path):
 datestart = time.strftime("%d/%m/%Y at %H:%M:%S")
 print "##### Cath b update started %s #####" %(datestart)
 
+#clean repertory
 clean_tmp(TMP)
 
 names=download_file(NAMES_GZ,TMP)
 domains=download_file(DOMAIN_DESC_GZ,TMP)
 
+#drop old tables and create new ones
 for t in tables:
 	if not dosql(pdbecursor,'DROP TABLE '+t+'_TEST'):
 		pdbecursor.close()
@@ -159,8 +161,6 @@ pdbecursor.executemany('INSERT INTO %s VALUES(:1,:2)' % (tables[0]+'_TEST'),node
 pdbeconnection.commit()
 
 fnames.close()
-
-
 
 #get the description corresponding to the number from CATH_DOMAIN for class, architecture, topology and homology superfamily
 pdbecursor.execute("select distinct(cathcode),class,arch,topol,homol from sifts_admin_new.CATH_DOMAIN");
@@ -305,7 +305,7 @@ SQL="drop table " + tables[0] +";\
 
 pdbeconnection.commit()   
 
-print "End update\n"
+print "End update CATH-b\n"
 
 pdbecursor.close()
 pdbeconnection.close()
