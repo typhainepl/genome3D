@@ -6,6 +6,7 @@ import cx_Oracle
 import re
 import ConfigParser
 import sys
+import time
 
 dirname = os.path.dirname(__file__)
 if not dirname:
@@ -130,6 +131,9 @@ def find_seq(comment_list,class_list,submpdb,subseqid,ordinal,uid,domain_id,pdb,
 ### MAIN program ###
              
 #clean repertory
+datestart = time.strftime("%d/%m/%Y at %H:%M:%S")
+print "##### ECOD update started %s #####" %(datestart)
+
 clean_tmp(TMP)
 
 #drop old tables and create new ones

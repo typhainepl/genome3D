@@ -6,7 +6,7 @@ import cx_Oracle
 import re
 import ConfigParser
 import sys
-
+import time
 	
 sys.path.insert(0,'/Users/typhaine/Desktop/genome3D/config/')
 sys.path.insert(0,'/nfs/msd/work2/typhaine/genome3D/config/')
@@ -111,6 +111,13 @@ def download_file(url,path):
 		
 	return filename
 			
+			
+			
+### MAIN program ###
+		
+datestart = time.strftime("%d/%m/%Y at %H:%M:%S")
+print "##### SCOPE update started %s #####" %(datestart)
+
 clean_tmp(TMP)
 
 for t in tables:

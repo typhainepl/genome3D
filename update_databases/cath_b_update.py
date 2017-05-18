@@ -97,9 +97,11 @@ def download_file(url,path):
 
 	return filename        
 
+### MAIN program ### 
+
 #get current date
-datestart = time.strftime("%x")
-print "Cath b update started %s \n" %(datestart)
+datestart = time.strftime("%d/%m/%Y at %H:%M:%S")
+print "##### Cath b update started %s #####" %(datestart)
 
 clean_tmp(TMP)
 
