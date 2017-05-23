@@ -37,11 +37,11 @@ TMP='cath_tmp'
 
 tables=['CATH_B_NAME','CATH_B_DOMAIN','CATH_B_SEGMENT']
 
-name='CREATE TABLE "CATH_B_NAME_TEST" ( \
+name='CREATE TABLE "CATH_B_NAME_NEW" ( \
 	"CATHCODE" VARCHAR2(20 BYTE) NOT NULL ENABLE, \
 	"NAME"     VARCHAR2(1000 BYTE) \
   )'
-domain='CREATE TABLE "CATH_B_DOMAIN_TEST" ( \
+domain='CREATE TABLE "CATH_B_DOMAIN_NEW" ( \
 	  "DOMAIN"       VARCHAR2(10 BYTE) NOT NULL ENABLE, \
 	  "ENTRY_ID"        VARCHAR2(4 BYTE) NOT NULL ENABLE, \
 	  "AUTH_ASYM_ID" VARCHAR2(5 BYTE), \
@@ -55,7 +55,7 @@ domain='CREATE TABLE "CATH_B_DOMAIN_TEST" ( \
 	  "HOMOL"        VARCHAR2(500 BYTE) \
   	)'
 	
-segment='CREATE TABLE "CATH_B_SEGMENT_TEST" ( \
+segment='CREATE TABLE "CATH_B_SEGMENT_NEW" ( \
 		"DOMAIN"       VARCHAR2(10 BYTE) NOT NULL ENABLE,\
 		"ENTRY_ID"        VARCHAR2(4 BYTE) NOT NULL ENABLE,\
 		"AUTH_ASYM_ID" VARCHAR2(5 BYTE),\
@@ -139,7 +139,7 @@ pdbeconnection.commit()
 
 
 # enter data in CATH_B_NAME table 
-print "insert data into %s_TEST table" % (tables[0])
+print "insert data into %s_NEW table" % (tables[0])
 
 fnames=open(names)
 
@@ -186,7 +186,7 @@ for cn in cathinfo:
 
 
 # Enter data in CATH_SEGMENT and CATH_DOMAIN tables
-print "insert data into %s_TEST and %s_TEST tables" % (tables[1],tables[2])
+print "insert data into %s_NEW and %s_NEW tables" % (tables[1],tables[2])
 
 fdomains=open(domains)
 domains=[]
@@ -265,17 +265,17 @@ inputsizes[6]=cx_Oracle.CLOB
 
 i = 0
 
-print "insert data into %s_TEST table" % (tables[1])
+print "insert data into %s_NEW table" % (tables[1])
 
 # The database can't deal with the CLOBs (hangs!!!) so I have insert 100 at a time... 
 while i < len(domains):
 	pdbecursor.setinputsizes(*inputsizes)
-	pdbecursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8,:9,:10,:11)' % (tables[1]+'_TEST'),domains[i:i+100])
+	pdbecursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8,:9,:10,:11)' % (tables[1]+'_NEW'),domains[i:i+100])
 	i+=100
 
 pdbeconnection.commit()    
 
-print "insert data into %s_TEST table" % (tables[2])
+print "insert data into %s_NEW table" % (tables[2])
 
 pdbecursor.executemany('INSERT INTO %s VALUES(:1,:2,:3,:4,:5,:6,:7,:8)' % (tables[2]+'_NEW'),segments)
 pdbeconnection.commit()    
@@ -284,9 +284,9 @@ pdbeconnection.commit()
 SQL="drop table " + tables[0] +";\
     drop table " + tables[1] +";\
     drop table " + tables[2] +";\
-    alter table " + tables[0] + "_TEST rename to " + tables[0] + ";\
-    alter table " + tables[1] + "_TEST rename to " + tables[1] + ";\
-    alter table " + tables[2] + "_TEST rename to " + tables[2] + ";\
+    alter table " + tables[0] + "_NEW rename to " + tables[0] + ";\
+    alter table " + tables[1] + "_NEW rename to " + tables[1] + ";\
+    alter table " + tables[2] + "_NEW rename to " + tables[2] + ";\
     commit;"
 #add indexes
 # SQL="CREATE INDEX cath_domain_entry_auth ON CATH_B_DOMAIN(entry_id,auth_asym_id) tablespace SIFTS_ADMIN_I;\
