@@ -70,8 +70,10 @@ my $representative = $path."representative/representative_list";
 #create tables
 create_tables::createTables($pdbe_dbh,'ecod',%tables_new);
 
-#create segment tables => not needed for ECOD
+#create segment tables
 #get_segment::getSegmentCath($pdbe_dbh,$tables_new{'SEGMENT_CATH'});
+my $output = './update_databases/ecod_update.py';
+system($output) == 0 or die "Can't update ECOD\n";
 
 get_segment::createCombinedSegmentECOD($pdbe_dbh, $tables_new{'SEGMENT_ECOD'},$tables_new{'SEGMENT_CATH'}, $tables_new{'SEGMENT_CATH_ECOD'});
 
