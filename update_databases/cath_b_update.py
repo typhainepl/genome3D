@@ -97,7 +97,7 @@ def download_file(url,path):
 
 	return filename        
 
-### MAIN program ### 
+### MAIN program ###
 
 #get current date
 datestart = time.strftime("%d/%m/%Y at %H:%M:%S")
@@ -111,13 +111,13 @@ names=download_file(NAMES_GZ,TMP)
 domains=download_file(DOMAIN_DESC_GZ,TMP)
 
 #drop old tables and create new ones
-for t in tables:
-	if not dosql(pdbecursor,'DROP TABLE '+t+'_NEW'):
-		pdbecursor.close()
-		pdbeconnection.close()
-		sys.exit(-1)
-
-pdbeconnection.commit()
+# for t in tables:
+# 	if not dosql(pdbecursor,'DROP TABLE '+t+'_NEW'):
+# 		pdbecursor.close()
+# 		pdbeconnection.close()
+# 		sys.exit(-1)
+# 
+# pdbeconnection.commit()
 
 if not dosql(pdbecursor,name):
 	pdbecursor.close()

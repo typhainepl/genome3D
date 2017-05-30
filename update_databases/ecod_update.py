@@ -138,17 +138,17 @@ print "##### ECOD update started %s #####" %(datestart)
 clean_tmp(TMP)
 
 #drop old tables and create new ones
-for t in tables:
-    if not dosql(pdbecursor,'DROP TABLE '+t+'_OLD'):
-        pdbecursor.close()
-        pdbeconnection.close()
-        sys.exit(-1)
-    if not dosql(pdbecursor,'ALTER TABLE '+t+'_NEW rename to '+t+'_OLD'):
-        pdbecursor.close()
-        pdbeconnection.close()
-        sys.exit(-1)
-
-pdbeconnection.commit()
+# for t in tables:
+#     if not dosql(pdbecursor,'DROP TABLE '+t+'_OLD'):
+#         pdbecursor.close()
+#         pdbeconnection.close()
+#         sys.exit(-1)
+#     if not dosql(pdbecursor,'ALTER TABLE '+t+'_NEW rename to '+t+'_OLD'):
+#         pdbecursor.close()
+#         pdbeconnection.close()
+#         sys.exit(-1)
+# 
+# pdbeconnection.commit()
 
 for t in [t_description,comment,classtable]:
     if not dosql(pdbecursor,t):
