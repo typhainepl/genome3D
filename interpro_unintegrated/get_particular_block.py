@@ -191,7 +191,6 @@ def getUnintegratedBlocks(pdbecursor, ipprocursor, clusternode, number, unintegr
                 if haveSameNumberOfDomains(blockDomains,number) == "true":
                     #if only one block in the cluster => GOLD
                     if nbBlock == 1 and clusternode not in seen:
-
                         toVerify = 1
                         unintegrated['gold_cluster']+=1
 
