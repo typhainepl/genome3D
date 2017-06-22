@@ -315,7 +315,9 @@ sub get_superfamily_id{
 	#return the scop superfamily id corresponding to the SCCS
 	my ($pdbe_dbh, $scop, $domain_mapping_db)=@_;
 
-	my $request = $pdbe_dbh->prepare("select ssf from $domain_mapping_db where sccs like '$scop%' ");
+	$scop .='.%';
+	
+	my $request = $pdbe_dbh->prepare("select ssf from $domain_mapping_db where sccs like '$scop' ");
 	$request->execute() or die;
 
 	while (my $all_row = $request->fetchrow_hashref){
