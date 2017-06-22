@@ -247,6 +247,7 @@ sub getMDABlocks{
 					my $gold = "no";
 					my $cpt_gold=0;
 					foreach my $cath (keys %listregcath){
+						###### constraint too strict ######
 						if (grep (/^$cath$/, keys %listregscop)){
 							$cpt_gold++;
 							# $gold = "yes";
