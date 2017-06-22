@@ -46,4 +46,4 @@ Write info in files
 Main program is ***mapping_process_ecod.pl*** <br>
 All the files generated are wrote under MDA_results/CATH_ECOD directory <br>
 The mapping process is the same as the CATH/SCOP mapping above, but just replacing SCOP data by ECOD data and the tables names have _ECOD added at the end<br>
-It needs an extra step which is getting ECOD data from the ECOD website (http://prodata.swmed.edu/ecod/distribution/ecod.latest.domains.txt). This step is executed using a python program under the ***update_database*** directory.
+To get the SEGMENT_ECOD table the program calls a python script located under the ***update_database*** directory. ECOD data are obtained from the ECOD website (http://prodata.swmed.edu/ecod/distribution/ecod.latest.domains.txt). 
