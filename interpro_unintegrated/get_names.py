@@ -10,7 +10,6 @@ import ConfigParser
 import re
 import os
 import sys
-from scipy.optimize._tstutils import description
 import code
 
 dirname = os.path.dirname(__file__)
@@ -92,7 +91,6 @@ def getName(pdbecursor,code):
         if gene3d and row[1]:
             name = row[1]
         elif gene3d and (not row[1]) and row[0]:
-            print row[0]
             name = "HOMOL: "+ row[0]
             
     if name != '':
@@ -128,7 +126,7 @@ for line in my_file:
 
     line = line.strip()
 #     print line
-#     my_file_to_print.write(line+",")
+    my_file_to_print.write(line+",")
     
     #search GENE3D and superfamily names
     if pattern_gene3d:
@@ -140,18 +138,18 @@ for line in my_file:
         
     
     #print names in the new file
-#     if name_gene3d != '':
-#         my_file_to_print.write(name_gene3d+",")
-#     else:
-#         my_file_to_print.write(",")
-#            
-#     if name_ssf != '':
-#         my_file_to_print.write(name_ssf+",")
-#     else:
-#         my_file_to_print.write(",")
-#        
-#     if name_ecod != '':
-#         my_file_to_print.write(name_ecod)
-#        
-#     my_file_to_print.write("\n")
+    if name_gene3d != '':
+        my_file_to_print.write(name_gene3d+",")
+    else:
+        my_file_to_print.write(",")
+            
+    if name_ssf != '':
+        my_file_to_print.write(name_ssf+",")
+    else:
+        my_file_to_print.write(",")
+        
+    if name_ecod != '':
+        my_file_to_print.write(name_ecod)
+        
+    my_file_to_print.write("\n")
     
