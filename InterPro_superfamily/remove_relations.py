@@ -2,7 +2,7 @@
 
 #######################################################################################
 # @author T. Paysan-Lafosse
-# This script updates the type of InterPro entries from a given list to 'Homologous superfamily'
+# This script removes relations (parent/child, contains/found in) for InterPro entries from a given list
 #######################################################################################
 
 import cx_Oracle
@@ -23,16 +23,11 @@ IPPROHOST=configdata.get('Global', 'ipproHost')
 ipproconnection = cx_Oracle.connect(IPPROUSER+'/'+IPPROPASS+'@'+IPPROHOST)
 ipprocursor = ipproconnection.cursor()
 
-#initialize variables
-entry_type = 'H'
-name=''
-short_name=''
-checked=''
-remark = "change entry type to Homologous superfamily"
-action = 'U'
-
-#get the current date
-time = time.strftime("%d-%b-%y").upper()
+#requests
+delete_entry2entry_parent = "delete from interpro.entry2entry where parent_ac=:entry"
+delete_entry2entry_child = "delete from interpro.entry2entry where entry_ac=:entry"
+delete_entry2comp_contains = "delete from interpro.entry2comp where entry1_ac=:entry"
+delete_entry2comp_contains_by = "delete from interpro.entry2comp where entry2_ac=:entry"
 
 #get the file to read
 file_name = sys.argv[1]
@@ -40,19 +35,31 @@ file_location = './'+file_name
 
 my_file = open (file_location,'r')
 
-#requests
-update_type = "update interpro.entry set entry_type='H', timestamp=:time, userstamp=:userstamp  where entry_ac=:entry_ac"
- 
 for line in my_file:
     pattern_entry = re.search("IPR",line)
      
     entry = line.strip()
      
     if pattern_entry:
-        #change the entry type
-        ipprocursor.execute(update_type,{'entry_ac':entry,'time':time,'userstamp':IPPROUSER})
+        #delete entries where entry is a parent
+        ipprocursor.execute(delete_entry2entry_parent,entry=entry)
+        
+        #delete entries where entry is a child
+        ipprocursor.execute(delete_entry2entry_child,entry=entry)
+
+        #delete entries where entry is a container
+        ipprocursor.execute(delete_entry2comp_contains,entry=entry)
+
+        #delete entries where entry found in
+        ipprocursor.execute(delete_entry2comp_contains_by,entry=entry)
+        
+        #commit changes
         ipproconnection.commit()
 
+        
+        
+        
+        
         
         
         
