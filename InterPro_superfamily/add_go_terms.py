@@ -2,7 +2,7 @@
 
 #######################################################################################
 # @author T. Paysan-Lafosse
-# This script add GO terms from an InterPro entry to another from a given list
+# This script add GO terms to the database from an InterPro entry to another from a given list
 # The file format should be: old_interpro_id,new_interpro_id per line (unix format)
 #######################################################################################
 
