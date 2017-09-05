@@ -11,6 +11,8 @@ use DBI;
 
 sub getChopping{
 	my ($pdbe_dbh, $directory, $representative, $value, %db) = @_;
+	
+	print "Searching for chopping and homology cases\n\n";
 
 	#initialize databases names
 	my $segment_scop_db;
@@ -111,7 +113,7 @@ sub getChopping{
 		my $key = $EntryID.$ChainID;
 		my $region = $key."::".$SiftsStart."-".$SiftsEnd;
 		my $CathNode = $xref_row->{CATHCODE};
-		#print $CathID."\t".$CathNode."\n";
+
 		my $MappedRegionKey = $CathID.";".$Ordinal;
 		$mappedRegion{$MappedRegionKey} = $region;
 		$DomainLength{$MappedRegionKey} = $SiftLength;
@@ -210,11 +212,6 @@ sub getChopping{
 		foreach my $node (@node) {$hash_node{$node} = "defined";}	# for fast checking if $domain belong to SF in cluster only
 
 		$cluster{$cluster_node} = "defined";
-		# print nodes
-		print "\nCluster $cluster_node\n";
-		print "------------------------------\nNodes in cluster:\n";
-		foreach my $node (@node) {print $node."\t";}
-		print "\n\n";
 
 		# get unique chains in cluster BASED ON node (two chains can repeat if belong to diff nodes in cluster)
 
@@ -228,7 +225,6 @@ sub getChopping{
 		my @uniq_chain = uniq(@repeated_chain);
 
 		# MAIN: for each unique chain
-		# print "Chains:\n";
 		my $NoOfChain=0; 
 		my %seen; my %status_Chain; my %seen_chain_chopped; my %pattern; my %counter_pattern; my %pattern_mapped; my %counter_pattern_mapped;
 		my %MDA; my %MDA_incluster_cath; my %MDA_incluster_scop;
@@ -243,32 +239,12 @@ sub getChopping{
 				my ($node, $chain) = split (/-/,$uniq_chain);
 				if (!$seen{$chain}) {				# get truly unique chain in a cluster
 					$NoOfChain++;
-					print "\n";
-					print $chain."\t";
 
 					# --------------------Start Printing Top Part Of Chain -----------------------# 
-					# PRINT $element($scop_id/$cath_id) 	--> @{$domain{}}
-					# PRINT $real_region			--> @{$region{}}
-					# PRINT $SF{}
 
 					foreach my $element_ord (@{$domain{$chain}}) {					
 						my ($element,$ord) = split (/;/,$element_ord);
-						if (!$seen{$element}) {
-							print $element;								# 1. print domain name
-							my ($descriptor,$real_region);
-							foreach my $region (@{$region{$element}}) {		
-								my $end;
-								($descriptor,$real_region) = split (/::/,$region);
-								if ($element =~ /\./) {
-									print "($region) ";
-								}
-								else {
-									print "($real_region)";					# 2. print region
-								}  
-
-							}
-							print "[$SF{$element_ord}]  ";					# 3. print SF
-							
+						if (!$seen{$element}) {						
 							if ($element !~ /\./) {
 								$seen{$element}="seen";
 							}
@@ -278,7 +254,6 @@ sub getChopping{
 					# --------------------End Printing Top Part Of Chain -----------------------#
 
 					$seen{$chain} = 'seen';							
-					print "\n";	
 
 					if ($mapped_chainCath{$chain}) {
 						@{$mapped_chainCath{$chain}} = sort { $a->[1] <=> $b->[1] } @{$mapped_chainCath{$chain}};
@@ -322,9 +297,7 @@ sub getChopping{
 
 						if ($hash_node{$SF{$domord}}) {	 # sf in cluster ONLY. uncomment for both scop/cath if want non-clusters ones
 							if (!$seen{$domord}) {
-								# print "Cath: ".$domord;
 								my ($descriptor,$real_region) = split (/::/,$mappedRegion{$domord});
-								# print "($real_region) ";
 
 							#-----------------in-cluster MDA----------------------------
 								if (!$seen_incluster_cath{$SF{$domord}}) {
@@ -349,7 +322,6 @@ sub getChopping{
 								$seen{$domord} = "seen";
 
 								my $noMappedDomain = @{$mapped_domain{$domord}};
-								# print "Number of Mapped domain ".$noMappedDomain;
 								@{$mapped_domain{$domord}} = sort { $a->[1] <=> $b->[1] } @{$mapped_domain{$domord}};
 
 								if ($noMappedDomain > 1) {
@@ -368,15 +340,12 @@ sub getChopping{
 										push (@{$status_chop{$cluster_node}}, "MixedChop");
 									}
 
-									# print "\nmatches: ";	
 									foreach my $mapped_domord_arr (@{$mapped_domain{$domord}}) 	{
 										my @arr_mapped_domord = $mapped_domord_arr;
 										my $mapped_domord = $arr_mapped_domord[0][0];
-										# print "$mapped_domord	";
 
 										if (!$hash_node{$SF{$mapped_domord}})  {$match_not_incluster{$cluster_node} = "defined";}
 									}
-									# print "\nPattern: "; print "[$SF{$domord}]	";
 									if ($pattern{$uniq_chain}) {
 										$pattern{$uniq_chain} = $pattern{$uniq_chain}."[$SF{$domord}]";
 									}
@@ -386,20 +355,15 @@ sub getChopping{
 									foreach my $mapped_domord_arr (@{$mapped_domain{$domord}}) 	{
 										my @arr_mapped_domord = $mapped_domord_arr;
 										my $mapped_domord = $arr_mapped_domord[0][0];
-										#****new
-										# print "[$SF{$mapped_domord}] ";
-										#****new
 
 										$pattern{$uniq_chain} = $pattern{$uniq_chain}."[$SF{$mapped_domord}]";
 									}
 									push (@{$cutting{$cluster_node}}, "(1-$noMappedDomain)");
-									# print "(1-$noMappedDomain)";
 
 									#----------------------for 'one instance'------------------------
 									$chopped_domain{$cluster_node} = $chain;
 									#----------------------End for 'one instance'------------------------
 								}
-								# print "\n";
 							} 
 							#-------------END if there's ScopChop------------#
 						}
@@ -441,10 +405,6 @@ sub getChopping{
 						if ($hash_node{$SF{$domord}}) {
 							if (!$seen{$domord}) {
 
-								# print "Scop: ".$domord;
-								my ($descriptor,$real_region) = split (/::/,$mappedRegion{$domord});
-								# print "($real_region)\t";
-
 								#-----------------in-cluster MDA----------------------------
 								if (!$seen_incluster_scop{$SF{$domord}}) {
 									if ($MDA_incluster_scop{$uniq_chain}) {$MDA_incluster_scop{$uniq_chain} = $MDA_incluster_scop{$uniq_chain}."-".$SF{$domord}}
@@ -464,7 +424,6 @@ sub getChopping{
 
 								$seen{$domord} = "seen";
 								my $noMappedDomain = @{$mapped_domain{$domord}};
-								# print "Number of Mapped domain ".$noMappedDomain;
 								@{$mapped_domain{$domord}} = sort { $a->[1] <=> $b->[1] } @{$mapped_domain{$domord}};
 
 								#-------------if there's CathChop------------#
@@ -473,7 +432,7 @@ sub getChopping{
 									if(!$status_Chain{$uniq_chain}) {
 										$status_Chain{$uniq_chain} = "CathChop"; 
 										push (@{$status_chop{$cluster_node}}, "CathChop");
-									#elsif ($domord =~/^[a-z]/) {$status_Chain{$uniq_chain} = "CathChop"; $status_chop{$cluster_node} = "CathChop";}
+
 										$counter_Chain++;
 										if (!$seen{$nodes}) {
 											$status_Cluster{$cluster_node}="Basic Chopping";
@@ -486,17 +445,13 @@ sub getChopping{
 										push (@{$status_chop{$cluster_node}}, "MixedChop");
 									}
 
-
-									# print "\nmatches: ";	
 									foreach my $mapped_domord_arr (@{$mapped_domain{$domord}}) 	{
 										my @arr_mapped_domord = $mapped_domord_arr;
 										my $mapped_domord = $arr_mapped_domord[0][0];
-										# print "$mapped_domord	";
 
 										if (!$hash_node{$SF{$mapped_domord}})  {$match_not_incluster{$cluster_node} = "defined";}
 										if ($SF{$mapped_domord} =~ /^4/) {$class4_status{$cluster_node} = "defined";}
 									}
-									# print "\n		Pattern: "; print "[$SF{$domord}]	";
 									if ($pattern{$uniq_chain}) {
 										$pattern{$uniq_chain} = $pattern{$uniq_chain}."[$SF{$domord}]";
 									}
@@ -507,36 +462,23 @@ sub getChopping{
 										my @arr_mapped_domord = $mapped_domord_arr;
 										my $mapped_domord = $arr_mapped_domord[0][0];
 
-										#****new
-										# print "[$SF{$mapped_domord}] ";
-										#****new
-
 										$pattern{$uniq_chain} = $pattern{$uniq_chain}."[$SF{$mapped_domord}]";
 									}
 									push (@{$cutting{$cluster_node}}, "(1-$noMappedDomain)");
-									# print "(1-$noMappedDomain)";
 
 									#----------------------for 'one instance'------------------------
 									$chopped_domain{$cluster_node} = $chain;
 									#----------------------for 'one instance'------------------------
 								}
-					
-								# print "\n";
 							} 
 							#-------------END if there's CathChop------------#
 						}  
 					}
 					undef %seen_incluster_scop;
 
-					#--------------------------Start Print Chain Stuff----------#
-					# PRINT $status_Chain{}
-					# PRINT $pattern{}
-					# GET $counter_pattern{}
-					# PRINT $counter_patter{}
+					#--------------------------Start Chain Stuff----------#
 
-					if ($status_Chain{$uniq_chain}) {							
-						print "Status of this chain is : ".$status_Chain{$uniq_chain}."\n";
-						print "Pattern of this chain is : ".$pattern{$uniq_chain}."\n";			
+					if ($status_Chain{$uniq_chain}) {									
 
 						if ($counter_pattern{$pattern{$uniq_chain}}) {
 							$counter_pattern{$pattern{$uniq_chain}}++;
@@ -544,34 +486,14 @@ sub getChopping{
 						else {
 							$counter_pattern{$pattern{$uniq_chain}} = 1;
 						}
-						# print "Counting... $counter_pattern{$pattern{$uniq_chain}}\n";
 					}	
-					# if ($pattern_mapped{$uniq_chain}) {
-					#	print "Pattern of this chain including single is : ".$pattern_mapped{$uniq_chain}."\n";
-
-					#	if ($counter_pattern_mapped{$pattern_mapped{$uniq_chain}}) {
-					#		$counter_pattern_mapped{$pattern_mapped{$uniq_chain}}++;
-					#	}
-					#	else {
-					#		$counter_pattern_mapped{$pattern_mapped{$uniq_chain}} = 1;
-					#	}
-					#	print "Counting mapped... $counter_pattern_mapped{$pattern_mapped{$uniq_chain}}\n";
-
-					# }
-
-					# if ($MDA{$uniq_chain}) {print "MDA of this chain is (only in-cluster): $MDA{$uniq_chain}\n";} 
-					# if ($MDA_cath{$uniq_chain}) {print "MDA of this chain (include off-cluster) for cath is: $MDA_cath{$uniq_chain}\n";} 
-					# if ($Length_cath{$uniq_chain}) {print "Length of MDA include off-cluster: $Length_cath{$uniq_chain}\n";}
-					# if ($MDA_scop{$uniq_chain}) {print "MDA of this chain (include off-cluster) for scop is: $MDA_scop{$uniq_chain}\n";}
-					# if ($Length_scop{$uniq_chain}) {print "Length of MDA include off-cluster: $Length_scop{$uniq_chain}\n";}
 					if ($MDA_cath{$uniq_chain} && $MDA_scop{$uniq_chain}) {
 						my @c;	$c[0] = $MDA_scop{$uniq_chain}; $c[1] = $Length_scop{$uniq_chain}; $c[2] = $Domain_scop{$uniq_chain}; 
 						push (@{$match_mda{$MDA_cath{$uniq_chain}}}, [ @c ]);
 						my @d;	$d[0] = $MDA_cath{$uniq_chain}; $d[1] = $Length_cath{$uniq_chain}; $d[2] = $Domain_cath{$uniq_chain};
 						push (@{$match_mda{$MDA_scop{$uniq_chain}}}, [ @d ]);
 					}
-					# if ($MDA_incluster_cath{$uniq_chain}) {print "In-cluster MDA of this chain for cath is: $MDA_incluster_cath{$uniq_chain}\n";} 
-					# if ($MDA_incluster_scop{$uniq_chain}) {print "In-cluster MDA of this chain for scop is: $MDA_incluster_scop{$uniq_chain}\n";} 
+
 					#--------------homology---------------------
 
 					if ($MDA_incluster_cath{$uniq_chain} && $MDA_incluster_scop{$uniq_chain}) {
@@ -587,14 +509,8 @@ sub getChopping{
 						}
 					} 
 					#-------------homology----------------------
-					
-					#if ($MDA_incluster_cath_homo{$uniq_chain}) {
-					#print "In-cluster MDA of this chain for cath (homo) is: $MDA_incluster_cath_homo{$uniq_chain}\n";
-					#} 
-					#if ($MDA_incluster_scop_homo{$uniq_chain}) {
-					#print "In-cluster MDA of this chain for scop (homo) is: $MDA_incluster_scop_homo{$uniq_chain}\n";
-					#} 
-					#----------------------End Print Chain Stuff---------------#				
+
+					#----------------------End Chain Stuff---------------#				
 
 				}													
 			} # REPRESENTATIVE  
@@ -602,40 +518,25 @@ sub getChopping{
 
 
 
-		#--------------------------Start Print Cluster Stuff-------------------------#
-		# PRINT $NoOfChain
-		# PRINT Basic Chopping 	--> $counter_Chain
-		# GET $lone_status{} 	--> based on $NoOfChain & $counter_Chain
-		# GET $one_instance{}	--> based on $counter_Chain
-		# PRINT "Pattern in this cluster"	--> %pattern	&	%counter_pattern{}
-		# GET $equivalent{}
-		# PRINT $equivalent{}
-		
-		print "\nThis cluster has $NoOfChain unique chains.\n";	
-		
-		print "Out of those, $counter_Chain has basic chopping.\n";						
+		#--------------------------Start Cluster Stuff-------------------------#				
 
 		if ($NoOfChain==$counter_Chain) {
 			if ($NoOfChain==1) {
 					$lone_equiv++; 
-					print "Lone equivalent....\n"; 
 					$lone_status{$cluster_node}="defined";
 				}
 			else {
 				$perfect_equiv++; 
-				print "Complete equivalent!!!\n";
 			}
 		}							# Golden split...
 		elsif ($counter_Chain==1) {
 			$one_instance++; 
-			print "One instance for $cluster_node----\n"; 
 			$one_instance{$cluster_node}=$chopped_domain{$cluster_node}; 
 		}
 			
 		undef %hash_node;
 
 		if ($counter_Chain > 0) {
-			print "Pattern in this cluster : \n";
 			my %seen_pattern;
 			my %seen_pattern_mapped;
 			my $pattern_count = 0;
@@ -643,29 +544,16 @@ sub getChopping{
 				if ($seen_pattern{$pattern{$chain}}) {}
 				else {
 					$pattern_count++;
-					print $pattern{$chain}."\t"."($counter_pattern{$pattern{$chain}})\n";
 					$seen_pattern{$pattern{$chain}} = "seen";
 
 					if ($counter_pattern{$pattern{$chain}} > 1) {$equivalent{$cluster_node} = "defined"; }
 				}
 			}
-			##print "\nPattern count = $pattern_count\n";
-			#print "Pattern including single domain matches:\n";
-			#foreach my $chain (sort keys %pattern_mapped) {
-			#if ($seen_pattern_mapped{$pattern_mapped{$chain}}) {}
-			#else {
-			# print $pattern_mapped{$chain}."\t"."($counter_pattern_mapped{$pattern_mapped{$chain}})\n";
-			# $seen_pattern_mapped{$pattern_mapped{$chain}} = "seen";
-			#}
-			#}
 		}
-
-		print "\nPercentages\n-----------\n";
 		
 		foreach my $mda (sort keys %match_mda) {
 			my %seen_matching_mda;
 			if ($mda !~/^\d/) {
-				print $mda.": \n";
 				my $total_matching_mda = @{$match_mda{$mda}};
 				my %matching_mda_count;
 				foreach my $matching_mda_arr (@{$match_mda{$mda}}) {
@@ -688,79 +576,57 @@ sub getChopping{
 						$percent = sprintf("%.3f", $percent);
 
 						if ($percent != 100) {
-							print $matching_mda."\t";
-							#print $matching_mda_length."\t";
-							#print $matching_mda_domain."\t";
-							print $matching_mda_count{$matching_mda}."\tPercent: $percent\n";
-							print $matching_mda_domain."\n";
+
 							if ($percent < 5) {
-								print "*LOW PERCENTAGE*\n";
 								print LOW_PERCENTAGE "$cluster_node\tMDA: $mda\tMatch: $matching_mda\t Percent:$percent\t"; 
-								#print LOW_PERCENTAGE "\t\t\t\t\t\t\t".
 								print LOW_PERCENTAGE "Domain: ".$matching_mda_domain."\n";
 							}
 							$seen_matching_mda{$matching_mda} = "seen";
 						}
 					}
 				}
-				print "\n\n";
 			}
 		}
-		print "\n";
-
-
 
 		my %seen_mda; my %mda_count;
 		my %seen_mda_incluster; my %mda_count_incluster_cath; my %mda_count_incluster_scop;
-		print "\nMDA pairing of this cluster (in-cluster): \n";
 		foreach my $chain (sort keys %MDA) {
 			if (!$seen_mda{$MDA{$chain}}) {
 				if ($MDA{$chain} =~ /-/) {
 					if ($mda_count{$cluster_node}) {$mda_count{$cluster_node}++;}
 					else {$mda_count{$cluster_node} = 1;}
-					print $MDA{$chain}."\n";
 					$seen_mda{$MDA{$chain}} = "seen";
 				}
 			}
 		}
-		print "In-cluster MDA for CATH for this cluster: \n";
 
 		my %homo_in_chain;
 		foreach my $chain (sort keys %MDA_incluster_cath) {
 			if (!$seen_mda_incluster{$MDA_incluster_cath{$chain}}) {
 				if ($mda_count_incluster_cath{$cluster_node}) {$mda_count_incluster_cath{$cluster_node}++;}
 				else {$mda_count_incluster_cath{$cluster_node} = 1;}
-				print $MDA_incluster_cath{$chain}."\n";
 				$seen_mda_incluster{$MDA_incluster_cath{$chain}} = "seen";
 
 				if ($MDA_incluster_cath{$chain} =~ /-/) {$homo_in_chain{$cluster_node} = "defined";}
 			}
 		}
-		print "In-cluster MDA for SCOP for this cluster: \n";
 		foreach my $chain (sort keys %MDA_incluster_scop) {
 			if (!$seen_mda_incluster{$MDA_incluster_scop{$chain}}) {
 				if ($mda_count_incluster_scop{$cluster_node}) {$mda_count_incluster_scop{$cluster_node}++;}
 				else {$mda_count_incluster_scop{$cluster_node} = 1;}
-				print $MDA_incluster_scop{$chain}."\n";
 				$seen_mda_incluster{$MDA_incluster_scop{$chain}} = "seen";
 
 				if ($MDA_incluster_scop{$chain} =~ /-/) {$homo_in_chain{$cluster_node} = "defined";}
 			}
 		}
 
-		if ($equivalent{$cluster_node}) {print "This cluster has equivalent split\n";}
 		if ($mda_count{$cluster_node} && $mda_count{$cluster_node} == 1 && !$match_not_incluster{$cluster_node}) {
-			print "One instance MDA----\n"; 
 			if ($status_Cluster{$cluster_node}){$lone_mda_status{$cluster_node} = "defined"; $one_instance_mda++;}
 		}
 		if ($mda_count_incluster_cath{$cluster_node} && $mda_count_incluster_cath{$cluster_node} == 1 && $mda_count_incluster_scop{$cluster_node} && $mda_count_incluster_scop{$cluster_node} == 1) {
-			$one_to_one_sf{$cluster_node} = "defined";
-			if ($homo_in_chain{$cluster_node}) {print "This cluster has consistent but multiple homology.\n";} 
-			else {print "This cluster has consistent homology.\n";}
-			
+			$one_to_one_sf{$cluster_node} = "defined";			
 		}
 
-		print "#---HOMOLOGY---#";
 		foreach my $homo_keys (sort keys %homology) {
 			
 			my $homo_match_count = @{$homology{$homo_keys}};
@@ -779,12 +645,9 @@ sub getChopping{
 					else {$homology_status{$cluster_node} = "CathHom";}
 				}
 			}
-			print "\n$homo_keys:\t";
 			my %seen_sf_fold; my %seen_fold;
 			foreach my $homo_match (@{$homology{$homo_keys}}) {
-				# my $fold_status; 
 
-				print $homo_match."\t";
 				my @superfamily_cath = ($homo_match =~ /(\d+\.\d+\.\d+\.\d+)/g);
 				my @superfamily_scop = ($homo_match =~ /([a-z]+\.\d+\.\d+)/g);
 				@superfamily_cath = uniq(@superfamily_cath);
@@ -794,7 +657,6 @@ sub getChopping{
 					my $fold;
 					if ($superfamily =~ /(\d+\.\d+\.\d+)\.\d+/) {$fold = $1;}
 					if (!$seen_sf_fold{$superfamily}) {
-						print "(fold = ".$fold.")\t"; 
 						if ($seen_fold{$fold}) {
 							if ($fold_status{$cluster_node} && $fold_status{$cluster_node} eq "MixedHom") {}
 							elsif ($fold_status{$cluster_node} && $fold_status{$cluster_node} eq "ScopHom") {
@@ -803,7 +665,6 @@ sub getChopping{
 							else {
 								$fold_status{$cluster_node} = "CathHom"; 
 							}
-							print "+++ THIS CLUSTER HAS SAME FOLD which is $fold_status{$cluster_node}+++\n";
 						}
 						$seen_fold{$fold} = "seen";
 						$seen_sf_fold{$superfamily} = "seen";
@@ -814,7 +675,6 @@ sub getChopping{
 					if ($superfamily =~ /(^[a-z]\.\d+)\.\d+/) {$fold = $1;}
 					if ($seen_sf_fold{$superfamily}) {}
 					else {
-						print "(fold = ".$fold.")\t"; 
 						if ($seen_fold{$fold}) {
 							if ($fold_status{$cluster_node} && $fold_status{$cluster_node} eq "MixedHom") {}
 							elsif ($fold_status{$cluster_node} && $fold_status{$cluster_node} eq "CathHom") {
@@ -823,26 +683,14 @@ sub getChopping{
 							else {
 								$fold_status{$cluster_node} = "ScopHom"; 
 							}
-							print "+++ THIS CLUSTER HAS SAME FOLD which is $fold_status{$cluster_node}+++\n";
 						}
 						$seen_fold{$fold} = "seen";
 						$seen_sf_fold{$superfamily} = "seen";
 					}
 				}
-				#foreach my $fold (@fold) {
-				#print "(fold = ".$fold.")\t";
-				 #if ($fold) {
-				#if ($seen{$fold}) {$fold_status = "defined"; print "+++ THIS CLUSTER HAS SAME FOLD +++\n";}
-				#$seen{$fold} = "seen";
-				 #}
-				#}
 			}
-		}
-		print "\n#---HOMOLOGY---#";
-		if ($homology_status{$cluster_node}) {print "\n*** THIS CLUSTER HAS HOMOLOGY DIFFERENCE which is $homology_status{$cluster_node}***"};
-		if ($fold_status{$cluster_node}) {print "\n+++ THIS CLUSTER HAS FOLD DIFFERENCE+++ which is $fold_status{$cluster_node}"};
-		print "\n";											
-		#--------------------------End Print Cluster Stuff-------------------------#
+		}								
+		#--------------------------End Cluster Stuff-------------------------#
 	}
 
 	#--------------End: Main Program-----------#
@@ -1336,11 +1184,6 @@ sub getChopping{
 		}
 	}
 
-	foreach my $nodes (sort keys %homology_status) {
-		if ($fold_status{$nodes}) {
-		#print JUL_SAMEFOLD $nodes."\n";
-		}
-	}
 	#-------------------PRINT_COMPARE_JULIETTE: lone MDA -------------------#
 
 
@@ -1424,36 +1267,5 @@ sub writeInFile{
 
 	close FILE;
 }
-
-
-# sub determineChopType{
-# 	my ($uniq_chain,$node,$status_Chain,$status_chop,$seen,$counter_Cluster,$status_Cluster, $chop)= @_;
-
-# 	my $chop_test;
-# 	# $chop eq CathChop for Cath and ScopChop for Scop
-# 	if($chop eq "ScopChop"){
-# 		$chop_test = "CathChop";
-# 	}
-# 	else{
-# 		$chop_test = "ScopChop";
-# 	}
-
-# 	if (!$status_Chain->{$uniq_chain}){
-# 		$status_Chain->{$uniq_chain} = $chop; 
-# 		push (@{$status_chop->{$node}, $chop);
-# 		$counter_Chain++;
-# 		if (!$seen->{$cluster}) {
-# 			$status_Cluster->{$node}="Basic Chopping";
-# 			$counter_Cluster++; 
-# 			$seen->{$cluster} = "seen";
-# 		}
-# 	}
-# 	elsif($status_Chain->{$uniq_chain} && $status_Chain->{$uniq_chain} eq $chop_test){
-# 		$status_Chain->{$uniq_chain} = "MixedChop"; 
-# 		push (@{$status_chop->{$node}}, "MixedChop");
-# 	}
-
-# 	return ($status_Chain,$status_chop,$seen,$counter_Cluster,$status_Cluster, $counter_Chain);
-# }
 
 1;

@@ -107,8 +107,8 @@ get_chop_homo::getChopping($pdbe_dbh,$mdaDirectory, $representative,'ecod', %tab
 #get_gold_clusters::get_gold_clusters($pdbe_dbh,$blockFile,$goldFile, $tables_new{'NODE_MAPPING'});
 
 my $runtime = time - $^T."\n";
-printf("\n\nTotal running time: %02d:%02d:%02d\n\n", int($runtime / 3600), int(($runtime % 3600) / 60), int($runtime % 60),"\n");
-
+printf("\nTotal running time: %02d:%02d:%02d\n\n", int($runtime / 3600), int(($runtime % 3600) / 60), int($runtime % 60),"\n");
+printf("###############################\n\n");
 
 sub cleanDirectory{
 	my ($directory) = @_;
