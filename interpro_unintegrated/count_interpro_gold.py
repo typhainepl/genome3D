@@ -52,7 +52,7 @@ def getNbBlocks(pdbecursor,clusternode):
 
 def getSSF(pdbecursor,scop):
     #return the scop superfamily id corresponding to the SCCS
-    pdbecursor.execute("select distinct superfamily_id,sccs from sifts_admin_new.SCOP_CLASS")
+    pdbecursor.execute("select distinct superfamily_id,sccs from sifts_admin.SCOP_CLASS")
     request = pdbecursor.fetchall()
 
     for all_row in request:

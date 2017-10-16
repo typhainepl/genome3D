@@ -27,8 +27,8 @@ sub getSegmentScop{
 	insert into $database (entry_id,auth_asym_id,"START","END",length,sccs,ssf,ordinal,domain)
 select e.entry_id, e.auth_asym_id, e."START", e."END", e."END"-e."START"+1 as LENGTH, s.sccs, s.superfamily_id, e.ordinal, e.scop_id as DOMAIN
 from 
-  sifts_admin_new.entity_scop e,
-  sifts_admin_new.scop_class s
+  sifts_admin.entity_scop e,
+  sifts_admin.scop_class s
 where 
   e.entry_id = s.entry and
   e.sunid = s.sunid
@@ -57,7 +57,7 @@ sub getSegmentCath{
 	insert into $database (entry_id,auth_asym_id,"START","END",length,cathcode,ordinal,domain)
 select entry_id, auth_asym_id, "START", "END", "END"-"START"+1 as LENGTH, accession, ordinal, domain
 from 
-	sifts_admin_new.entity_cath
+	sifts_admin.entity_cath
 SQL
 	
 	print "insert data in $database\n";
