@@ -165,7 +165,8 @@ def getUnintegratedBlocks(pdbecursor, ipprocursor, clusternode, number, unintegr
     # select the different blocks in the cluster
     if value == 'SCOP':
         getBlocks = "select block from cluster_block_new where cluster_node=:clusternode"
-    else:getBlocks = "select block from cluster_block_ecod_new where cluster_node=:clusternode"
+    else:
+        getBlocks = "select block from cluster_block_ecod_new where cluster_node=:clusternode"
                 
     pdbecursor.execute(getBlocks, clusternode=clusternode)
     getBlocks_sth = pdbecursor.fetchall()
@@ -190,7 +191,6 @@ def getUnintegratedBlocks(pdbecursor, ipprocursor, clusternode, number, unintegr
                 if haveSameNumberOfDomains(blockDomains,number) == "true":
                     #if only one block in the cluster => GOLD
                     if nbBlock == 1 and clusternode not in seen:
-
                         toVerify = 1
                         unintegrated['gold_cluster']+=1
 
@@ -237,10 +237,10 @@ def getCluster(pdbecursor,pdbecursor2,ipprocursor,number,file,value):
     #get_nodes_sth=pdbecursor.fetchall()
 
     unintegrated = {'gold_cluster':0, 'counters':{'cath':0,'scop':0,'pair':0}}
+#     cpt = 0
 
-    for cluster_row in get_nodes_sth:
-
-        nodes = cluster_row[1].split(' ')
+    for cluster_row in pdbecursor:
+        nodes = cluster_row[1].read().split(' ')
         cluster = cluster_row[0]
 
         nbCath = 0
@@ -257,8 +257,10 @@ def getCluster(pdbecursor,pdbecursor2,ipprocursor,number,file,value):
         #case of same number of CATH and SCOP superfamilies in the cluster
         if int(number) == 1:
             if nbCath == nbScop:
+#                 cpt+=1
                 # for each cluster, get the blocks
                 unintegrated = getUnintegratedBlocks(pdbecursor2, ipprocursor, cluster, number, file, nodes,unintegrated,value)
+            
 
         #case of one CATH and one SCOP superfamily in the cluster
         elif int(number) == 2:
@@ -268,8 +270,8 @@ def getCluster(pdbecursor,pdbecursor2,ipprocursor,number,file,value):
         #case of two CATH SF for one SCOP, or one CATH SF for 2 SCOP in cluster
         elif int(number) == 3:
             if (nbCath == 2 and nbScop == 1) or (nbCath == 1 and nbScop == 2):
-                unintegrated = getUnintegratedBlocks(pdbecursor2, ipprocursor, cluster, number, file, nodes,unintegrated,value)
-
+                unintegrated = getUnintegratedBlocks(pdbecursor2, ipprocursor, cluster, number, file, nodes,unintegrated,value) 
+#     print cpt
 
     return unintegrated
 
