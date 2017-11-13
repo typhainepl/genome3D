@@ -163,7 +163,7 @@ pdbeconnection.commit()
 fnames.close()
 
 #get the description corresponding to the number from CATH_DOMAIN for class, architecture, topology and homology superfamily
-pdbecursor.execute("select distinct(cathcode),class,arch,topol,homol from sifts_admin.CATH_DOMAIN");
+pdbecursor.execute("select distinct(cathcode),class,arch,topol,homol from CATH_DOMAIN");
 cathinfo = pdbecursor.fetchall();
 
 homologies = {}
@@ -192,7 +192,7 @@ domains=[]
 segments=[]
 
 print "Get data from files"
-pdbecursor.prepare("select name,source from sifts_admin.CATH_DOMAIN where domain= :domain")
+pdbecursor.prepare("select name,source from CATH_DOMAIN where domain= :domain")
 # Read data from all.txt file
 for row in fdomains.readlines():
 	# data for domain table

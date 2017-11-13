@@ -347,7 +347,7 @@ sub getUniprot{
 	my $chain_num = substr($chain,-1);
 	my $uniprot = "None";
 
-	my $get_uniprot = $pdbe_dbh->prepare("select accession from sifts_admin.sifts_xref_residue where entry_id=? and AUTH_ASYM_ID=? and accession is not null and canonical_acc=1");
+	my $get_uniprot = $pdbe_dbh->prepare("select accession from sifts_xref_residue where entry_id=? and AUTH_ASYM_ID=? and accession is not null and canonical_acc=1");
 	$get_uniprot->execute($pdb,$chain_num);
 	
 	while (my $row = $get_uniprot->fetchrow_hashref) {
@@ -399,7 +399,7 @@ sub getCoverage{
 	my $coverage = 0;
 
 	#get the coverage percentage of the uniprot domain by the chain
-	my $search_coverage = $pdbe_dbh->prepare("select coverage from sifts_admin.coverage where ENTRY_ID=? and AUTH_ASYM_ID=?");
+	my $search_coverage = $pdbe_dbh->prepare("select coverage from coverage where ENTRY_ID=? and AUTH_ASYM_ID=?");
 	$search_coverage->execute($pdb,$chainid);
 
 	while (my $row = $search_coverage->fetchrow_hashref) {
@@ -477,7 +477,7 @@ sub printMDABlocks{
 
 	my $get_count_mda_block_sth = $pdbe_dbh->prepare("select count(*) from $cluster_block_db where cluster_node=?") or die;
 
-	my $get_total_uniprotid_cluster = $pdbe_dbh->prepare("select count(distinct(accession)) from sifts_admin.sifts_xref_residue sxr
+	my $get_total_uniprotid_cluster = $pdbe_dbh->prepare("select count(distinct(accession)) from sifts_xref_residue sxr
 join $block_chain_db bc 
 on substr(bc.chain_id,0,4)=sxr.entry_id and substr(bc.chain_id,5,5)=sxr.auth_asym_id
 join $cluster_block_db cb on cb.block=bc.block
