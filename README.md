@@ -9,7 +9,7 @@ Main program is ***mapping_process.pl*** <br>
 All the files generated are wrote under MDA_results/CATH_4_1 directory
 
 ## Get data from SIFTS table (*get_segment.pm*)
-- Get different PDB entries data from SIFTS_ADMIN.ENTITY_CATH and SIFTS_ADMIN.ENTITY_SCOP tables
+- Get different PDB entries data from ENTITY_CATH and ENTITY_SCOP tables (PDBEREAD_PDBE_LIVE schema)
 - Import in SEGMENT_CATH and SEGMENT_SCOP
 - Aggregate data from the both tables on ```auth_asym_id``` in SEGMENT_CATH_SCOP
 
