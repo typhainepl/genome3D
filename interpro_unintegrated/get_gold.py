@@ -66,7 +66,7 @@ def get_gold (pdbecursor,entry,type):
 
 def getSSF(pdbecursor,scop):
     #return the scop superfamily id corresponding to the SCCS
-    request = "select distinct sccs from sifts_admin.SCOP_CLASS where superfamily_id=:scop"
+    request = "select distinct sccs from SCOP_CLASS where superfamily_id=:scop"
     pdbecursor.execute(request,{'scop':scop})
     request_sth = pdbecursor.fetchall()
 

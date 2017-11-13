@@ -70,13 +70,13 @@ def getName(pdbecursor,code):
     if scop:
         code = scop.group(1)
         get_name = "select distinct(scop_superfamily) \
-                        from sifts_admin.entity_scop \
+                        from entity_scop \
                         join scop_class using (sunid) \
                         where superfamily_id = :code"
     elif gene3d:
         code = gene3d.group(1)
         get_name = "select distinct homol,cn.name \
-                    from sifts_admin.cath_domain cd \
+                    from cath_domain cd \
                     join cath_name cn using (cathcode) \
                     where CATHCODE=:code"
              
