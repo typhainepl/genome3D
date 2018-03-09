@@ -35,7 +35,7 @@ NAMES_GZ = REPO + "cath-b-newest-names.gz"
 DOMAIN_DESC_GZ = REPO + "cath-b-newest-all.gz"
 TMP='cath_tmp'
 
-tables=['CATH_B_NAME','CATH_B_DOMAIN','CATH_B_SEGMENT']
+tables=['CATH_B_NAME','CATH_B_DOMAIN','CATH_B_SEGMENT','CATH_DOMAIN_COPY']
 
 name='CREATE TABLE "CATH_B_NAME_NEW" ( \
 	"CATHCODE" VARCHAR2(20 BYTE) NOT NULL ENABLE, \
@@ -65,6 +65,12 @@ segment='CREATE TABLE "CATH_B_SEGMENT_NEW" ( \
 		"END_INS_CODE" VARCHAR2(1 BYTE),\
 		"ORDINAL"      NUMBER(38,0) NOT NULL ENABLE\
 	  )'
+
+cath_domain_copy ='CREATE TABLE "CATH_DOMAIN_COPY" ( \
+		"DOMAIN" VARCHAR(10) NOT NULL ENABLE, \
+		"NAME" CLOB, \
+		"SOURCE" CLOB\
+	)'
 
 def clean_tmp(path):
 	os.system('rm -Rf '+path)
@@ -134,9 +140,20 @@ if not dosql(pdbecursor,segment):
 	pdbeconnection.close()
 	sys.exit(-1)
 
+#drop CATH_DOMAIN COPY
+pdbecursor.execute("DROP TABLE %s" % (tables[3]))
+
+if not dosql(pdbecursor,cath_domain_copy):
+        pdbecursor.close()
+        pdbeconnection.close()
+        sys.exit(-1)
 
 pdbeconnection.commit()
 
+#copy clob data from CATH_DOMAIN
+print "copy CLOB data into %s TABLE" % (tables[3])
+pdbecursor.execute('INSERT INTO %s select DOMAIN,NAME,SOURCE from CATH_DOMAIN' % (tables[3]))
+pdbeconnection.commit()
 
 # enter data in CATH_B_NAME table 
 print "insert data into %s_NEW table" % (tables[0])
@@ -193,7 +210,7 @@ domains=[]
 segments=[]
 
 print "Get data from files"
-pdbecursor.prepare("select name,source from CATH_DOMAIN where domain= :domain")
+pdbecursor.prepare("select name,source from %s where domain=:domain" % (tables[3]))
 # Read data from all.txt file
 for row in fdomains.readlines():
 	# data for domain table
@@ -214,7 +231,7 @@ for row in fdomains.readlines():
 
 	name = None
 	source = None
-
+	
 	# get name and source from CATH_DOMAIN
 	pdbecursor.execute(None, domain = domain)
 	for d in pdbecursor:
