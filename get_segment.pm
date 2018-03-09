@@ -27,11 +27,13 @@ sub getSegmentScop{
 	insert into $database (entry_id,auth_asym_id,"START","END",length,sccs,ssf,ordinal,domain)
 select e.entry_id, e.auth_asym_id, e."START", e."END", e."END"-e."START"+1 as LENGTH, s.sccs, s.superfamily_id, e.ordinal, e.scop_id as DOMAIN
 from 
-  entity_scop e,
-  scop_class s
-where 
-  e.entry_id = s.entry and
-  e.sunid = s.sunid
+  entity_scop e
+join 
+  scop_class s 
+  on e.entry_id = s.entry 
+  and e.sunid = s.sunid
+  and e.auth_asym_id = s.auth_asym_id 
+  and e."START" = s.beg_seq
 SQL
 	
 	print "insert data in $database\n";
