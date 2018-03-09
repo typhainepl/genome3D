@@ -2,7 +2,11 @@
 
 #######################################################################################
 # @author T. Paysan-Lafosse
-# For each cluster, this script get particular blocks (gold, one to many domains between cath and scop MDA blocks)
+# @brief For each cluster, this script get particular blocks (gold, one to many domains between cath and scop MDA blocks)
+# @parameters: number file_name value
+#    number: 1=gold block, 2=1CATH-1SCOP 3=1CATH-2SCOP
+#    file_name: result file
+#    value: SCOP or ECOD
 #######################################################################################
 
 import urllib2
