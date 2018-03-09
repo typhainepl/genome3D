@@ -107,8 +107,8 @@ print "##### Cath b update started %s #####" %(datestart)
 clean_tmp(TMP)
 
 #download new data
-names=download_file(NAMES_GZ,TMP)
-domains=download_file(DOMAIN_DESC_GZ,TMP)
+names_file=download_file(NAMES_GZ,TMP)
+domains_file=download_file(DOMAIN_DESC_GZ,TMP)
 
 #drop old tables and create new ones
 # for t in tables:
@@ -141,7 +141,7 @@ pdbeconnection.commit()
 # enter data in CATH_B_NAME table 
 print "insert data into %s_NEW table" % (tables[0])
 
-fnames=open(names)
+fnames=open(names_file)
 
 nodes=[]
 
@@ -188,7 +188,7 @@ for cn in cathinfo:
 # Enter data in CATH_SEGMENT and CATH_DOMAIN tables
 print "insert data into %s_NEW and %s_NEW tables" % (tables[1],tables[2])
 
-fdomains=open(domains)
+fdomains=open(domains_file)
 domains=[]
 segments=[]
 
