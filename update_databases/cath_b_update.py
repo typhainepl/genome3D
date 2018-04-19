@@ -125,6 +125,10 @@ domains_file=download_file(DOMAIN_DESC_GZ,TMP)
 # 
 # pdbeconnection.commit()
 
+#pdbecursor.execute("DROP TABLE %s" % (tables[2]+'_NEW'))
+#pdbecursor.execute("DROP TABLE %s" % (tables[1]+'_NEW'))
+#pdbecursor.execute("DROP TABLE %s" % (tables[0]+'_NEW'))
+
 if not dosql(pdbecursor,name):
 	pdbecursor.close()
 	pdbeconnection.close()
@@ -141,7 +145,7 @@ if not dosql(pdbecursor,segment):
 	sys.exit(-1)
 
 #drop CATH_DOMAIN COPY
-pdbecursor.execute("DROP TABLE %s" % (tables[3]))
+#pdbecursor.execute("DROP TABLE %s" % (tables[3]))
 
 if not dosql(pdbecursor,cath_domain_copy):
         pdbecursor.close()
@@ -300,7 +304,8 @@ pdbeconnection.commit()
 
 SQL="drop table " + tables[0] +";\
     drop table " + tables[1] +";\
-    drop table " + tables[2] +";\
+    drop table " + tables[2] +";\ 
+    drop table " + tables[3] +";\
     alter table " + tables[0] + "_NEW rename to " + tables[0] + ";\
     alter table " + tables[1] + "_NEW rename to " + tables[1] + ";\
     alter table " + tables[2] + "_NEW rename to " + tables[2] + ";\
