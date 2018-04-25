@@ -304,7 +304,7 @@ pdbeconnection.commit()
 
 SQL="drop table " + tables[0] +";\
     drop table " + tables[1] +";\
-    drop table " + tables[2] +";\ 
+    drop table " + tables[2] +";\
     drop table " + tables[3] +";\
     alter table " + tables[0] + "_NEW rename to " + tables[0] + ";\
     alter table " + tables[1] + "_NEW rename to " + tables[1] + ";\
