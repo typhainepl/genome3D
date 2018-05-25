@@ -38,19 +38,22 @@ sub mapping{
 		my $ScopOrd = $xref_row->{SCOP_DOMAIN}."-".$xref_row->{SCOP_ORDINAL};
 		my $key = $CathOrd." ".$ScopOrd;
 
-		$data{$key}{CD} = $xref_row->{CATH_DOMAIN};
-		$data{$key}{SD} = $xref_row->{SCOP_DOMAIN};
-		$data{$key}{CO} = $xref_row->{CATH_ORDINAL};
-		$data{$key}{SO} = $xref_row->{SCOP_ORDINAL};
-		$data{$key}{CL} = $xref_row->{CATH_LENGTH};
-		$data{$key}{SL} = $xref_row->{SCOP_LENGTH};
+		$data{$key}{ENTRY}	  = $xref_row->{ENTRY_ID};
+		$data{$key}{AUTH}	  = $xref_row->{AUTH_ASYM_ID};
+		$data{$key}{CD}    	  = $xref_row->{CATH_DOMAIN};
+		$data{$key}{SD}  	  = $xref_row->{SCOP_DOMAIN};
+		$data{$key}{CO}   	  = $xref_row->{CATH_ORDINAL};
+		$data{$key}{SO}   	  = $xref_row->{SCOP_ORDINAL};
+		$data{$key}{CL} 	  = $xref_row->{CATH_LENGTH};
+		$data{$key}{SL}   	  = $xref_row->{SCOP_LENGTH};
 		$data{$key}{CATHCODE} = $xref_row->{CATHCODE};
-		$data{$key}{SCCS} = $xref_row->{SCCS};
+		$data{$key}{SCCS}	  = $xref_row->{SCCS};
+		
 		if ($xref_row->{SSF}){
-			$data{$key}{SSF} = $xref_row->{SSF};
+			$data{$key}{SSF}  = $xref_row->{SSF};
 		}
 		else{
-			$data{$key}{SSF} = "";
+			$data{$key}{SSF}  = "";
 		}
 
 		my $CS = $data{$key}{CS} = $xref_row->{CATH_START};
@@ -128,9 +131,6 @@ sub mapping{
 			# calculate mapped length
 			my $Dom_Combined = $data{$key}{Dom_Combined} = $data{$key}{CD}."-".$data{$key}{SD};
 
-			my $CathOrd_DomCombined = $CathOrd.$Dom_Combined;
-			my $ScopOrd_DomCombined = $ScopOrd.$Dom_Combined;
-
 			#cath
 			if (!defined $length_CathMapped{$Dom_Combined}) { 
 				$length_CathMapped{$Dom_Combined} = $OverlapLength; 
@@ -155,15 +155,15 @@ sub mapping{
 	}
 
 	#get data from the table just created and insertion in PDBE_ALL_DOMAIN_MAPPING_NEW
-	print "insert data in the $domain_mapping_db table\n";
+	print "insert data in $domain_mapping_db\n";
 
 	#insert into PDBE_ALL_DOMAIN_MAPPING request
 	my $insert_request = <<"SQL";
 INSERT INTO $domain_mapping_db (
-	cath_domain,scop_domain,cath_ordinal,scop_ordinal,cath_length,scop_length,overlap_length,pc_cath,pc_scop,pc_cath_domain,pc_scop_domain,
+	entry_id,auth_asym_id,cath_domain,scop_domain,cath_ordinal,scop_ordinal,cath_length,scop_length,overlap_length,pc_cath,pc_scop,pc_cath_domain,pc_scop_domain,
 	pc_smaller,pc_bigger,cathcode,sccs,ssf
 	) 
-	values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+	values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
 SQL
 
 	my $sth_insert = $pdbe_dbh->prepare($insert_request) or die "ERR prepare insertion\n";
@@ -194,6 +194,8 @@ SQL
 
 		#insert data in the table
 		$sth_insert->execute(
+			$data{$key}{ENTRY},
+			$data{$key}{AUTH},
 			$data{$key}{CD},
 			$data{$key}{SD},
 			$data{$key}{CO},
@@ -213,6 +215,74 @@ SQL
 		); 
 	}
 }
+#sub getOverlapLength{
+#	my ($pdbe_dbh,$lengthdb,$domain_mapping_db,$val) = @_;
+#	
+#		my $request_overlap = <<"SQL";
+#UPDATE $lengthdb ldb
+#SET ldb.pc_overlap = (SELECT sum(dm.overlap_length)
+#    FROM $domain_mapping_db dm
+#    where dm.entry_id = ldb.entry_id 
+#    and dm.auth_asym_id=ldb.auth_asym_id 
+#    and dm.$val=ldb.$val 
+#    group by dm.entry_id, dm.auth_asym_id, dm.$val
+#    )/ldb.length*100
+#SQL
+#
+#	print "update overlap value in $lengthdb\n";
+#	my $sth_insert = $pdbe_dbh->prepare($request_overlap) or die "Can't prepare select data \n";
+#	$sth_insert->execute() or die "Can't insert data \n";
+#
+#}
+
+sub getOverlapLength{
+	my ($pdbe_dbh,$lengthdb,$domain_mapping_db,$val) = @_;
+	
+	my $request_overlap = <<"SQL";
+select entry_id, auth_asym_id, $val, overlap_length
+    FROM $domain_mapping_db
+    order by entry_id, auth_asym_id, $val
+SQL
+	my $sth_get_overlap = $pdbe_dbh->prepare($request_overlap) or die "Can't prepare select data \n";
+	$sth_get_overlap->execute() or die "Can't insert data \n";
+	
+	my %data;
+	
+	#calculate the total length of the overlap for each chain/superfamily
+	while ( my $xref_row = $sth_get_overlap->fetchrow_hashref ) {
+		my $entry_id = $xref_row->{ENTRY_ID};
+		my $auth = $xref_row->{AUTH_ASYM_ID};
+		my $code = $xref_row->{$val};
+		my $overlap = $xref_row->{OVERLAP_LENGTH};
+		
+		if (!(exists $data{$entry_id}) or !(exists $data{$entry_id}{$auth}) or !(exists $data{$entry_id}{$auth}{$code})){
+			$data{$entry_id}{$auth}{$code} = $overlap;
+		}
+		else{
+			$data{$entry_id}{$auth}{$code} += $overlap;
+		}
+	}
+	
+	#insert overlap data into the lengths table
+	my $request_overlap_up = <<"SQL";
+	UPDATE $lengthdb ldb
+SET ldb.pc_overlap = ? /ldb.length*100
+where entry_id = ?
+    and auth_asym_id = ?
+    and $val = ?
+SQL
+	print "update overlap value in $lengthdb\n";
+	
+	foreach my $entry_id (sort keys %data){
+		foreach my $auth (sort keys $data{$entry_id}){
+			foreach my $code (sort keys $data{$entry_id}{$auth}){
+				my $overlap = $data{$entry_id}{$auth}{$code};
+				my $sth_insert = $pdbe_dbh->prepare($request_overlap_up) or die "Can't prepare select data \n";
+				$sth_insert->execute($overlap,$entry_id,$auth,$code) or die "Can't insert data \n";
+			}
+		}
+	}
+}
 
 sub getSegmentLength{
 	my ($pdbe_dbh,$table) = @_;
@@ -220,7 +290,7 @@ sub getSegmentLength{
 	my %length;
 
 	# get full length of each domain (combined ordinals)
-	my $segment = $pdbe_dbh->prepare("select distinct * from $table where \"START\" is not null and \"END\" is not null ");
+	my $segment = $pdbe_dbh->prepare("select distinct * from $table ");
 	$segment->execute();
 
 	while ( my $xref_row = $segment->fetchrow_hashref ) {

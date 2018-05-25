@@ -16,15 +16,19 @@ sub createTables{
 	#initialize databases names
 	my $segment_scop_db;
 	my $combined_segment_db;
+	my $scop_lengths_db;
 	
 	if ($value eq 'scop'){
 		$segment_scop_db = $db{'SEGMENT_SCOP'};
+		$scop_lengths_db = $db{'SCOP_LENGTHS'};
 		$combined_segment_db = $db{'SEGMENT_CATH_SCOP'};
 	}
 	else{
+		$scop_lengths_db = $db{'ECOD_LENGTHS'};
 		$combined_segment_db = $db{'SEGMENT_CATH_ECOD'};
 	}
 	
+	my $cath_lengths_db = $db{'CATH_LENGTHS'};
 	my $segment_cath_db = $db{'SEGMENT_CATH'};
 	my $domain_mapping_db  = $db{'DOMAIN_MAPPING'};
 	my $node_mapping_db  = $db{'NODE_MAPPING'};
@@ -47,10 +51,21 @@ CREATE TABLE $segment_cath_db(
  	cathcode varchar(20)
  )
 SQL
+	
+	my $create_cath_lengths = <<"SQL";
+CREATE TABLE $cath_lengths_db(
+	entry_id varchar(4),
+ 	auth_asym_id varchar(5),
+ 	cathcode varchar(20),
+ 	length number(38,0),
+ 	pc_overlap number(38,0)
+)
+SQL
 
 	if ($value eq 'scop'){
 		
 		$pdbe_dbh->do($create_segment_cath) or die "Can't create $segment_cath_db table\n\n";
+		$pdbe_dbh->do($create_cath_lengths) or die "Can't create $cath_lengths_db table\n\n";
 
 		my $create_segment_scop = <<"SQL";
 CREATE TABLE $segment_scop_db(
@@ -67,6 +82,19 @@ CREATE TABLE $segment_scop_db(
 SQL
 	
 		$pdbe_dbh->do($create_segment_scop) or die "Can't create $segment_scop_db table\n\n";
+		
+			my $create_scop_lengths = <<"SQL";
+CREATE TABLE $scop_lengths_db(
+	entry_id varchar(4),
+ 	auth_asym_id varchar(5),
+ 	SSF number(38,0),
+ 	length number(38,0),
+ 	pc_overlap number(38,0)
+)
+SQL
+	
+		$pdbe_dbh->do($create_scop_lengths) or die "Can't create $scop_lengths_db table\n\n";
+
 	}
 
 
@@ -93,6 +121,8 @@ SQL
 
 	my $create_domain_mapping = <<"SQL";
 CREATE TABLE $domain_mapping_db( 
+	entry_id varchar(4),
+	auth_asym_id varchar(3),
  	cath_domain varchar(10),
  	scop_domain varchar(10),
  	cath_ordinal number,

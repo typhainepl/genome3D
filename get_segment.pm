@@ -14,7 +14,7 @@ use Data::Dumper;
 sub getSegmentScop{
 	#Recover data from ENTITY_SCOP and SCOP_CLASS
 	
-	my ($pdbe_dbh,$database) = @_;
+	my ($pdbe_dbh,$database,$lengthdb) = @_;
 	my %entry;
 
 	#case no database given on input
@@ -30,22 +30,32 @@ from
   entity_scop e
 join 
   scop_class s 
-  on e.entry_id = s.entry 
-  and e.sunid = s.sunid
-  and e.auth_asym_id = s.auth_asym_id 
-  and e."START" = s.beg_seq
+  on e.scop_id = s.scop_id
+  and e.ordinal = s.ordinal 
 SQL
 	
 	print "insert data in $database\n";
 	
 	my $sth_select = $pdbe_dbh->prepare($get_info_scop) or die "Can't prepare select data \n";
 	$sth_select->execute() or die "Can't insert data \n";
+	
+	my $get_total_length = <<"SQL";
+	insert into $lengthdb (entry_id,auth_asym_id,SSF,length)
+select entry_id, auth_asym_id,SSF,sum("LENGTH") 
+from 
+	$database 
+group by entry_id,auth_asym_id,SSF
+SQL
+	
+	print "insert data in $lengthdb\n";
+	my $sth_insert = $pdbe_dbh->prepare($get_total_length) or die "Can't prepare select data \n";
+	$sth_insert->execute() or die "Can't insert data \n";
 }
 
 #get data from CATH tables
 sub getSegmentCath{
 	#Recover data from ENTITY_CATH
-	my ($pdbe_dbh, $database) = @_;
+	my ($pdbe_dbh, $database, $lengthdb) = @_;
 	
 	my %entry;
 	
@@ -65,7 +75,19 @@ SQL
 	print "insert data in $database\n";
 	my $sth_select = $pdbe_dbh->prepare($get_info_cath) or die "Can't prepare select data \n";
 	$sth_select->execute() or die "Can't insert data \n";
-
+	
+	my $get_total_length = <<"SQL";
+	insert into $lengthdb (entry_id,auth_asym_id,cathcode,length)
+select entry_id, auth_asym_id,cathcode,sum("LENGTH") 
+from 
+	$database 
+group by entry_id,auth_asym_id,cathcode
+SQL
+	
+	print "insert data in $lengthdb\n";
+	my $sth_insert = $pdbe_dbh->prepare($get_total_length) or die "Can't prepare select data \n";
+	$sth_insert->execute() or die "Can't insert data \n";
+	
 }
 
 # create table SEGMENT_CATH_SCOP

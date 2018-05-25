@@ -32,16 +32,16 @@ print "Mapping process SCOP started ".localtime()."\n";
 #delete and rename existing tables
 #print "drop tables\n";
 
-my @tables = ('SEGMENT_CATH','SEGMENT_SCOP','SEGMENT_CATH_SCOP','DOMAIN_MAPPING','NODE_MAPPING','BLOCK_CHAIN','BLOCK_UNIPROT','CLUSTER_BLOCK','MDA_BLOCK','CLUSTER');
+my @tables = ('SEGMENT_CATH','SEGMENT_SCOP','CATH_LENGTHS','SCOP_LENGTHS','SEGMENT_CATH_SCOP','DOMAIN_MAPPING','NODE_MAPPING','BLOCK_CHAIN','BLOCK_UNIPROT','CLUSTER_BLOCK','MDA_BLOCK','CLUSTER');
 
 my %tables_new;
 
 foreach my $t (@tables){
 	if ($t !~ /ECOD/){
-		my $drop = 'DROP TABLE '.$t.'_TEST';
+#		my $drop = 'DROP TABLE '.$t.'_TEST';
 		# my $drop = 'DROP TABLE '.$t.'_OLD';
 		# my $alter = 'ALTER TABLE '.$t.'_NEW rename to '.$t.'_OLD';
-		$pdbe_dbh->do($drop) or die "Can't delete ".$t."_TEST table\n\n";
+#		$pdbe_dbh->do($drop) or die "Can't delete ".$t."_TEST table\n\n";
 		# $pdbe_dbh->do($alter) or die "Can't rename ".$t."_NEW table\n\n";
 		$tables_new{$t}=$t.'_TEST';
 	}
@@ -70,18 +70,23 @@ my $representative = $path."representative/representative_list";
 create_tables::createTables($pdbe_dbh,'scop',%tables_new);
 
 #create segment tables
-get_segment::getSegmentCath($pdbe_dbh,$tables_new{'SEGMENT_CATH'});
-get_segment::getSegmentScop($pdbe_dbh,$tables_new{'SEGMENT_SCOP'});
-#
+get_segment::getSegmentCath($pdbe_dbh,$tables_new{'SEGMENT_CATH'},$tables_new{'CATH_LENGTHS'});
+get_segment::getSegmentScop($pdbe_dbh,$tables_new{'SEGMENT_SCOP'},$tables_new{'SCOP_LENGTHS'});
+
 get_segment::createCombinedSegmentSCOP($pdbe_dbh, $tables_new{'SEGMENT_SCOP'},$tables_new{'SEGMENT_CATH'}, $tables_new{'SEGMENT_CATH_SCOP'});
 
-# #calculate and create domain mapping
+#calculate and create domain mapping
 domain_mapping::mapping($pdbe_dbh, $tables_new{'SEGMENT_SCOP'},$tables_new{'SEGMENT_CATH'}, $tables_new{'SEGMENT_CATH_SCOP'}, $tables_new{'DOMAIN_MAPPING'});
-#
-##node mapping
-node_mapping::nodeMapping($pdbe_dbh,$tables_new{'SEGMENT_SCOP'},$tables_new{'SEGMENT_CATH'}, $tables_new{'DOMAIN_MAPPING'},$tables_new{'NODE_MAPPING'});
-#
-##clustering
+domain_mapping::getOverlapLength($pdbe_dbh,$tables_new{'CATH_LENGTHS'},$tables_new{'DOMAIN_MAPPING'},'CATHCODE');
+domain_mapping::getOverlapLength($pdbe_dbh,$tables_new{'SCOP_LENGTHS'},$tables_new{'DOMAIN_MAPPING'},'SSF');
+
+#clean files directory
+cleanDirectory($mdaDirectory);
+
+#node mapping
+node_mapping::nodeMapping($pdbe_dbh,$tables_new{'SEGMENT_SCOP'},$tables_new{'SEGMENT_CATH'}, $tables_new{'CATH_LENGTHS'}, $tables_new{'SCOP_LENGTHS'}, $tables_new{'DOMAIN_MAPPING'},$tables_new{'NODE_MAPPING'},$mdaDirectory);
+
+#clustering
 clustering::clustering($pdbe_dbh,$tables_new{'NODE_MAPPING'},$tables_new{'CLUSTER'});
 
 #get medal equivalence
@@ -89,10 +94,6 @@ clustering::clustering($pdbe_dbh,$tables_new{'NODE_MAPPING'},$tables_new{'CLUSTE
 
 #get MDA blocks
 get_mda_blocks::getMDABlocks($pdbe_dbh, $mdaDirectory, $representative, 'scop', %tables_new);
-
-#print MDA blocks info into files
-cleanDirectory($mdaDirectory);
-
 get_mda_blocks::printMDABlocks($mdaDirectory, $pdbe_dbh, %tables_new);
 
 #print other mda info (one instance, equivalent split, class4...)

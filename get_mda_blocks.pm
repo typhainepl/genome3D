@@ -10,17 +10,25 @@ use strict;
 use warnings;
 use DBI;
 use Data::Dumper;
+use node_mapping;
  
 sub getMDABlocks{
 	my ($pdbe_dbh, $directory, $representative, $value, %db) = @_;
 
 	print "determine MDA blocks\n";
+	
+	#file containing excluding blocks
+	open EXCLUDED, ">>", $directory."excluded_domains.list";
+	print EXCLUDED "\n\n####################\nExlcuded mda blocks\n\n";
+	
 	#initialize databases names
 	my $segment_scop_db;
 	my $combined_segment_db;
+	my $scop_length_db;
 	
 	if ($value eq 'scop'){
 		$segment_scop_db = $db{'SEGMENT_SCOP'};
+		$scop_length_db = $db{'SCOP_LENGTHS'};
 		$combined_segment_db = $db{'SEGMENT_CATH_SCOP'};
 	}
 	else{
@@ -28,6 +36,7 @@ sub getMDABlocks{
 		$combined_segment_db = $db{'SEGMENT_CATH_ECOD'};
 	}
 	my $segment_cath_db = $db{'SEGMENT_CATH'};
+	my $cath_length_db  = $db{'CATH_LENGTHS'};
 	my $domain_mapping  = $db{'DOMAIN_MAPPING'};
 	my $cluster_db 		= $db{'CLUSTER'};
 	my $block_chain_db	= $db{'BLOCK_CHAIN'};
@@ -41,9 +50,9 @@ sub getMDABlocks{
 	$pdbe_dbh->{LongReadLen} = 512 * 1024;
 
 	my $cluster_sth = $pdbe_dbh->prepare("select * from $cluster_db order by length(nodes) desc");
-	my $scop_sth = $pdbe_dbh->prepare("select * from $segment_scop_db where \"START\" is not null and \"END\" is not null");
+	my $scop_sth = $pdbe_dbh->prepare("select * from $segment_scop_db");
 	my $cath_sth = $pdbe_dbh->prepare("select * from $segment_cath_db");
-	my $map_sth = $pdbe_dbh->prepare("select * from $domain_mapping");
+	my $map_sth = $pdbe_dbh->prepare("select * from $domain_mapping order by entry_id, auth_asym_id");
 
 	#---- end preparing request ----#
 
@@ -127,6 +136,11 @@ sub getMDABlocks{
 		my $ScopID = $xref_row->{SCOP_DOMAIN};
 		my $ScopOrdinal = $xref_row->{SCOP_ORDINAL}; 
 		my $PCSmaller = $xref_row->{PC_SMALLER};
+		
+		my $entry_id = $xref_row->{ENTRY_ID};
+		my $auth_asym_id = $xref_row->{AUTH_ASYM_ID};
+		my $cathcode = $xref_row->{CATHCODE};
+		my $scopssf = $xref_row->{SSF};
 
 		my $CathSeg = $CathID.";".$CathOrdinal;
 		my $ScopSeg = $ScopID.";".$ScopOrdinal;
@@ -137,7 +151,10 @@ sub getMDABlocks{
 		my ($Ent_chainscop,$mappedRegionScop) = split (/::/,$mappedRegion{$ScopSeg});
 		my ($startScop,$endScop) = split (/-/,$mappedRegionScop);
 
-		if ($PCSmaller > 50) {
+		my $pcOverlapCath = node_mapping::getPcOverlap($pdbe_dbh, $cath_length_db, $cathcode, $entry_id, $auth_asym_id, 'cathcode');
+		my $pcOverlapScop = node_mapping::getPcOverlap($pdbe_dbh, $scop_length_db, $scopssf, $entry_id, $auth_asym_id, 'ssf');
+		
+		if (($pcOverlapCath>=75 and $pcOverlapScop>=75) or (($pcOverlapCath<75 or $pcOverlapScop<75) and $PCSmaller > 50)) {
 			my @c;	$c[0] = $ScopSeg; $c[1] = $startScop; $c[2] = $endScop;
 			push (@{$mapped_domain{$CathSeg}},[ @c ]);
 			my @d;	$d[0] = $CathSeg; $d[1] = $startCath; $c[2] = $endCath;
@@ -150,7 +167,9 @@ sub getMDABlocks{
 				my @b;	$b[0] = $ScopSeg; $b[1] = $startScop; $b[2] = $endScop;
 				push (@{$mapped_chainScop{$ChainID}},[ @b ]);
 			} 
-
+		}
+		else{
+			print EXCLUDED "$entry_id $auth_asym_id $cathcode $scopssf, PcOverlapCATH: $pcOverlapCath, PcOverlapSCOP: $pcOverlapScop, pcSmaller: $PCSmaller\n";
 		}
 	}
 	#------------------------End: Get overlapping domain (with cutoff 50% over smaller domain) ----------------#
@@ -321,7 +340,9 @@ sub getMDABlocks{
 
 		# print "\nThis cluster has $NoOfChain unique chains.\n";	
 		getUniprotPercentage($pdbe_dbh,$block_uniprot_db,$cluster_block_db,$mda_blocks_db,$cluster_node);
-	}				
+	}		
+	
+	close EXCLUDED;		
 }
 
 sub uniq {

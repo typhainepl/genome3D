@@ -13,8 +13,13 @@ use warnings;
 use DBI;
  
 sub nodeMapping{
-	my ($pdbe_dbh, $segment_scop_db, $segment_cath_db, $domain_mapping_db, $node_mapping_db) = @_;
+	my ($pdbe_dbh, $segment_scop_db, $segment_cath_db, $cath_length_db, $scop_length_db, $domain_mapping_db, $node_mapping_db, $directory) = @_;
 
+	print "generating data for the $node_mapping_db table\n";
+	
+	open EXCLUDED, ">>", $directory."excluded_domains.list";
+	print EXCLUDED "\n\n####################\nExlcuded node mapping\n\n";
+	
 	# Gather data from subroutines
 	# Note: scop_all & cath_all subroutines connects to individual segment tables, gather both MAPPED & UNMAPPED data
 	#	e.g. NoOfScopDomainAll contains:
@@ -48,19 +53,33 @@ sub nodeMapping{
 
 	#-----------------------main---------------------------------
 
-	my $mapped_together_sth = $pdbe_dbh->prepare("select * from $domain_mapping_db");
+
+	my $mapped_together_sth = $pdbe_dbh->prepare("select * from $domain_mapping_db order by entry_id, auth_asym_id");
 	$mapped_together_sth->execute();
 
 	my ($hrefMappedTogether, $CathDom_Ordinal, $ScopDom_Ordinal, $ScopSuperfamily, %seen);
 
 	while ( my $mapped_together_row = $mapped_together_sth->fetchrow_hashref ) {
+		#search overlap for cath and scop
+		my $CathSuperfamily = $mapped_together_row->{CATHCODE};
+		my $ScopSSF = $mapped_together_row->{SSF};
+		my $entry_id = $mapped_together_row->{ENTRY_ID};
+		my $auth_asym_id = $mapped_together_row->{AUTH_ASYM_ID};
+
+		#get percentage of Scop overlap
+		my $pcOverlapScop = getPcOverlap($pdbe_dbh, $scop_length_db, $ScopSSF, $entry_id, $auth_asym_id, 'ssf');
 		
-		# if the percentage of mapping domain is less than 25, don't take it into account 
+		#get percantage of Cath overlap
+		my $pcOverlapCath = getPcOverlap($pdbe_dbh, $cath_length_db, $CathSuperfamily, $entry_id, $auth_asym_id, 'cathcode');
+
+		# if the percentage of overlapCATH or overlapSCOP is less than 75 and mapping domain is less than 25, don't take it into account 
 		my $pc_Small = $mapped_together_row->{PC_SMALLER};
-		if ($pc_Small < 25) {next;}
+		if (($pcOverlapCath<75 or $pcOverlapScop<75) and $pc_Small < 25) {
+			print EXCLUDED "$entry_id $auth_asym_id $CathSuperfamily $ScopSSF, PcOverlapCATH: $pcOverlapCath, PcOverlapSCOP: $pcOverlapScop, pcSmall: $pc_Small\n";
+			next;
+		}
 
 	  	my $CathDomain = $mapped_together_row->{CATH_DOMAIN};
-		my $CathSuperfamily = $mapped_together_row->{CATHCODE};
 		my $CathOrdinal = $mapped_together_row->{CATH_ORDINAL};
 		my $CathLength = $mapped_together_row->{CATH_LENGTH};
 		my $pcCath = $mapped_together_row->{PC_CATH_DOMAIN};
@@ -307,9 +326,32 @@ SQL
 			$medal_range
 		);
  	}
+ 	
+ 	close EXCLUDED;
  }
 
 #----------------------endmain--------------------------------
+
+sub getPcOverlap{
+	#return the percentage of overlapping for a given entry/chain/superfamily
+	my ($pdbe_dbh, $length_db, $superfamily, $entry_id, $auth_asym_id, $val) = @_;
+	
+	my $request_overlap = <<"SQL";
+select pc_overlap
+  from $length_db
+  where entry_id=? and auth_asym_id=? and $val=?
+SQL
+
+	#get percentage of overlap
+	my $get_overlap_sth = $pdbe_dbh->prepare($request_overlap) or die "ERR prepare request overlap\n";
+	$get_overlap_sth->execute($entry_id,$auth_asym_id,$superfamily);
+			
+	my $pcOverlap = 0;
+	while ( my $overlap_row = $get_overlap_sth->fetchrow_hashref ) {
+		$pcOverlap = $overlap_row->{PC_OVERLAP};
+	}
+	return $pcOverlap;
+}
 
 sub get_superfamily_id{
 	#return the scop superfamily id corresponding to the SCCS
@@ -366,7 +408,7 @@ sub cathScopAll{
 	my $counter_DomainOrd = 0;
 	my $counter_Domain = 0;
 
-	my $all_sth = $pdbe_dbh->prepare("select * from $segment_db where \"START\" is not null and \"END\" is not null");
+	my $all_sth = $pdbe_dbh->prepare("select * from $segment_db");
 	$all_sth->execute();
 
 	while (my $all_row = $all_sth->fetchrow_hashref){
